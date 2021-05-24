@@ -1,2 +1,2 @@
-# cloudlog-plugins
-some plugins for the cloudlog projet
+# Cloudlog-plugins
+some plugins for the Cloudlog projet
