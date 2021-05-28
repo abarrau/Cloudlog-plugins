@@ -1,0 +1,13 @@
+{
+    "name":"sharedata",
+    "author":"f4ans",
+    "source":"https://github.com/abarrau",
+    "version":"1.1",
+    "migration":"000",
+    "description":"This external plugins can share data (last qso, or if you are on air) into an iframe web page",
+    "config":{ 
+        "is_public_plugins":1, 
+        "href_main_menu":0,
+        "js_include":1
+    }
+}
