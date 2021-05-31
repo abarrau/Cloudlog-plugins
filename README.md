@@ -1,6 +1,4 @@
 # Cloudlog-plugins
-some plugins for the Cloudlog projet
+Some plugins for the Cloudlog projet, all information in the wiki page. 
 
-All information in the wiki page. 
-
--- installation : https://github.com/abarrau/Cloudlog-plugins/wiki/Cloudlog-:-external-plugins-:-add-fonctionnality
+-- Installation : https://github.com/abarrau/Cloudlog-plugins/wiki/Cloudlog-:-external-plugins-:-add-fonctionnality
