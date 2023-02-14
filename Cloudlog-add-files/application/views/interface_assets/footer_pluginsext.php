@@ -20,10 +20,13 @@
         $(pluginsext_menu_account).insertAfter('#navbarNav .dropdown-menu .dropdown-item[title=\"Account\"]');
         
         // add pluginsext item to main menu & external javascript //
-        <?php if(($this->config->item('use_auth')) && ($this->session->userdata('user_type') >= 2)) {
+        <?php 
+            if(($this->config->item('use_auth')) && ($this->session->userdata('user_type') >= 2)) {
             if ($this->config->item('pluginsext_allow')) {                
                 $CI =& get_instance();
                 $CI->load->model('pluginsext_model');
+                //$this->load->model('pluginsext_model');
+                //$pluginsext_q = $this->pluginsext_model->get_by_user($this->session->userdata('user_id'),1);
                 $pluginsext_q = $CI->pluginsext_model->get_by_user($this->session->userdata('user_id'),1);
                 
                 if ($pluginsext_q->num_rows() > 0) {
@@ -46,6 +49,6 @@
             }
         } ?>
         
-        <?php if ($this->config->item('pluginsext_allow')) {  } ?>
+        <?php //if ($this->config->item('pluginsext_allow')) {  } ?>
     </script>
     <!-- END pluginsext functions -->

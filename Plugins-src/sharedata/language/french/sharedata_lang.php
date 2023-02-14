@@ -12,3 +12,7 @@ $lang['sharedata_show_country'] = 'Afficher le pays';
 $lang['sharedata_onair_allow'] = 'Afficher "on air"';
 $lang['sharedata_onair_timeout'] = 'Timeout d\'affichage';
 $lang['sharedata_onair_show_band'] = 'Afficher la bande';
+
+$lang['sharedata_onair_showon'] = 'Format de l\'icone "ON"';
+$lang['sharedata_onair_showoff'] = 'Format de l\'icone "OFF"';
+

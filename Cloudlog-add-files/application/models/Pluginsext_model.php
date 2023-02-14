@@ -11,9 +11,9 @@ class Pluginsext_Model extends CI_Model {
     private $table_name = 'pluginsext';
     private $table_name_user = 'pluginsext_users';
     
-    function __construct() {
-        parent::__construct();
-    }
+//    function __construct() {
+//        parent::__construct();
+//    }
 
     // FUNCTION : array list_all()
     // return list of all plugin //
@@ -175,7 +175,6 @@ class Pluginsext_Model extends CI_Model {
         } 
         return $return;
     }
-    
     
 }
 
