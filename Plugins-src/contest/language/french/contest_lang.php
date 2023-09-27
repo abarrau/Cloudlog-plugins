@@ -6,6 +6,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 $lang['pluginsext_allow_helpertxt'] = 'Activer ce nouveau plugin';
 $lang['contest_bddcoluserdef_namecontest'] = '[technique] Nom du champs pour "Contest ID"';
 $lang['contest_allow_screen_oncontestpage'] = 'Afficher scores (page contest)';
+$lang['contest_period_not_activity_allowed'] = 'Période d\'inactivité autorisée (entre 2 QSO)';
+$lang['contest_period_timeplotter'] = 'Période groupée (graph heure)';
 
 $lang['contest_list'] = 'Liste des Concours';
 $lang['contest_name'] = 'Nom du concours';
@@ -14,14 +16,12 @@ $lang['contest_date'] = 'Période';
 $lang['contest_date_start'] = 'Date/heure (début)';
 $lang['contest_date_end'] = 'Date/heure (fin)';
 $lang['contest_score'] = 'Résultat';
+$lang['contest_add'] = 'Ajouter un concours';
 $lang['contest_statistic'] = 'Statistiques';
 $lang['contest_nb_qso'] = 'Nb QSO';
 $lang['contest_bands'] = 'Bandes';
 $lang['contest_bandsselect'] = 'Sélectionnez bandes';
-$lang['contest_add'] = 'Ajouter un concours';
 $lang['contest_include'] = 'Inclus';
-$lang['contest_period_timeplotter'] = 'Période groupée (graph heure)';
-$lang['contest_period_not_activity_allowed'] = 'Période d\'inactivité autorisée (entre 2 QSO)';
 $lang['contest_period_activity'] = 'Période d\'activité';
 $lang['contest_period_inactivity'] = 'Inactivité';
 
@@ -68,7 +68,7 @@ $lang['contest_log_remarks'] = 'Remarques sur le concours';
 $lang['contest_log_export'] = 'Log à exporter';
 $lang['contest_log_select_band_title'] = 'Sélectionnez une bande';
 $lang['contest_log_select_band'] = 'Choisissez une bande, pour afficher le log';
-$lang['contest_log_download'] = 'Choisissez une bande, pour afficher le log';
+$lang['contest_log_download'] = 'Télécharger';
 
 $lang['contest_log_use_cabrillo_cloudlog'] = 'Utiliser la fonction "Export Cabrillo" de Cloudlog';
 $lang['contest_log_use_cabrillo_btn'] = 'Cabrillo Export';
