@@ -8,6 +8,11 @@ Some plugins for the Cloudlog projet, all information on the wiki page.
 - sharedata :
     - description : share information about your status and last qso 
     - link: https://github.com/abarrau/Cloudlog-plugins/wiki/Cloudlog-:-plugin-%22sharedata%22
+- contest :
+    - description : create and manage contest, statistique
+    - link: https://github.com/abarrau/Cloudlog-plugins/wiki/Cloudlog-:-plugin-%22contest%22
+
+##### In work : 
 - searchonref : 
     - description : search french callsign on ref database and show information under the map on qso page 
     - link: in developpement
