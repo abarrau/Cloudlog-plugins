@@ -17,6 +17,7 @@
                 <thead>
                     <tr>
                         <th scope="col"><?php echo $this->lang->line('general_word_name'); ?></th>
+                        <th scope="col"><?php echo $this->lang->line('general_word_name'); ?> (id)</th>
                         <th scope="col"><?php echo ucfirst($this->lang->line('pluginsext_active')); ?></th>
                         <th scope="col" style="text-align:right;"><?php echo $this->lang->line('pluginsext_options'); ?></th>
 		    </tr>
@@ -24,7 +25,8 @@
                 <tbody>
                     <?php foreach ($list_pluginsext as $row) { ?>
                     <tr>
-                        <td style="width:50%;"><?php echo $row->pluginsext_name;?></td>
+                        <td style="width:40%;"><?php echo $row->pluginsext_name;?></td>
+                         <td style="width:20%;"><?php echo $row->pluginsext_nameid;?></td>
                         <td class='mode_<?php echo $row->pluginsext_id ?>'>
                             <?php if ($row->pluginsext_user_allow == 1) { echo $this->lang->line('general_word_yes'); } else { echo $this->lang->line('general_word_no');} ?>
                         </td>

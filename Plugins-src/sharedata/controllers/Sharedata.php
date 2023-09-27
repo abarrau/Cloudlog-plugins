@@ -1,97 +1,143 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class Sharedata extends Pluginsext_extands { 
+class CI_Sharedata extends Pluginsext_extands {
+
     public $_user_stylesheet_change = true;
 
     //
-    public function index() {
-        echo "USE CORRECT METHODE";
-    }
-        
     public function cl_pluginsext_edit($_data) {
-        $_data['sharedata_url2use'] = $this->_CLContext->get_url_ex('sharedata','lastqso');
-        $_data['sharedata_url2use_onair'] = $this->_CLContext->get_url_ex('sharedata','onair');
+        $this->load->model('user_model');
+        $_data['themes'] = $this->user_model->getThemes();
+        $_data['sharedata_url2use'] = $this->get_url_ex('sharedata','lastqso');
+        $_data['sharedata_url2use_onair'] = $this->get_url_ex('sharedata','onair');
         return $_data; 
     } 
     
-    public function lastqso() {
-        $this->change_user_stylesheet();
-        $this->_CLContext->load->model('logbook_model');
-        $this->_CLContext->load->model('user_model');
-        $this->_CLContext->lang->load('general_words','english');        
-        $data['last_qsos'] = isset($this->_pluginsext_user->pluginsext_params->nb_last_qso)?$this->_CLContext->logbook_model->get_last_qsos($this->_pluginsext_user->pluginsext_params->nb_last_qso)->result():array();
-        $data['show_time'] = isset($this->_pluginsext_user->pluginsext_params->show_time)?$this->_pluginsext_user->pluginsext_params->show_time:0;
-        $data['show_country'] = isset($this->_pluginsext_user->pluginsext_params->show_country)?$this->_pluginsext_user->pluginsext_params->show_country:0;
-        $user = $this->_CLContext->user_model->get_by_id($this->_user_id)->row();
-        $data['page_title'] = "Last QSO for ".$user->user_callsign;
-        $this->_CLContext->load->view('interface_assets/mini_header', $data);
-        $this->_CLContext->load->add_package_path(APPPATH.$this->_CLContext->config->item('pluginsext_path').'/sharedata/');
-        $this->_CLContext->load->view('sharedata/lastqso');
-        //$this->_CLContext->load->view('interface_assets/footer');
-        $this->change_user_stylesheet(true);
-	}
-        
-    public function onair() {
-        $this->change_user_stylesheet();
-        $state_json = json_decode($this->get_onair(false),true);
-        $data['onair_state'] = $state_json['onair_state'];
-        $data['onair_txt'] = ($state_json['onair_state']==1)?'ON AIR'.(($state_json['onair_band']!='')?' ('.$state_json['onair_band'].')':''):'not active';
-        $data['onair_icon'] = $state_json['onair_icon'];
-        $this->_CLContext->load->view('interface_assets/mini_header', $data);
-        $this->_CLContext->load->add_package_path(APPPATH.$this->_CLContext->config->item('pluginsext_path').'/sharedata/');
-        $this->_CLContext->load->view('sharedata/onair');
-        //$this->_CLContext->load->view('interface_assets/footer');
-        $this->change_user_stylesheet(true);
-    }
+    public function lastqso($_data) {
+        $this->load->model('user_model');
+        $this->lang->load('general_words','english');  
+        $_data['pluginsext_row']->pluginsext_params->show_time = isset($_data['pluginsext_row']->pluginsext_params->show_time)?$_data['pluginsext_row']->pluginsext_params->show_time:0;
+        $_data['pluginsext_row']->pluginsext_params->show_country = isset($_data['pluginsext_row']->pluginsext_params->show_country)?$_data['pluginsext_row']->pluginsext_params->show_country:0;
+        $_data['pluginsext_row']->pluginsext_params->show_stationcall = isset($_data['pluginsext_row']->pluginsext_params->show_stationcall)?$_data['pluginsext_row']->pluginsext_params->show_stationcall:0;
+        $_data['pluginsext_row']->pluginsext_params->show_mylocator = isset($_data['pluginsext_row']->pluginsext_params->show_mylocator)?$_data['pluginsext_row']->pluginsext_params->show_mylocator:0;
+        $_data['pluginsext_row']->pluginsext_params->qso_theme = isset($_data['pluginsext_row']->pluginsext_params->qso_theme)?$_data['pluginsext_row']->pluginsext_params->qso_theme:'cosmo';
+        $this->change_user_stylesheet($_data['pluginsext_row']->pluginsext_params->qso_theme);
 
-    
-    public function set_onair($returnecho=true) {
-        $onair_state = str_replace('"', "", $this->_CLContext->input->post("onair_state"));
-        $value_json = json_decode($this->_pluginsext_user->pluginsext_values, true);
-        $value_json['onair_date'] = ($onair_state==1)?date('U'):'';
-        $this->_CLContext->pluginsext_model->set_value($this->_pluginsext_user->pluginsext_id, $this->_CLContext->session->userdata('user_id'), $value_json);
-        if ($onair_state==1) {
-            $onair_icon = $this->_pluginsext_user->pluginsext_params->onair_showon;
-        } else {
-            $onair_icon = $this->_pluginsext_user->pluginsext_params->onair_showoff;
+        if (!isset($_data['_oUser'])) {
+            $_data['_oUser'] = $this->user_model->get_by_id($this->session->userdata('user_id'))->row();
         }
-        $return = json_encode(array('message'=>'OK','onair_state'=>$onair_state, 'onair_icon'=>'fa-'.$onair_icon));
-        if ($returnecho) echo $return; else return $return;
+
+        $filter_qso = null;
+        if (isset($_data['methode_args']['arg1']) && isset($_data['methode_args']['arg2'])) {
+        	switch($_data['methode_args']['arg1']) {
+        		case "filterstation": 
+        			if ($_data['pluginsext_row']->pluginsext_params->show_stationcall==2) $_data['pluginsext_row']->pluginsext_params->show_stationcall=0;
+        			if ($_data['pluginsext_row']->pluginsext_params->show_mylocator==2) $_data['pluginsext_row']->pluginsext_params->show_mylocator=1;
+        			$filter_qso = " (COL_STATION_CALLSIGN='".str_replace("-","/",$_data['methode_args']['arg2'])."') "; break;
+        		case "filterlocation": $filter_qso = " (station_id='".$_data['methode_args']['arg2']."') "; break;  
+        	}
+        }
+        $hide_contest_qso = isset($_data['pluginsext_row']->pluginsext_params->hide_contest_qso)?$_data['pluginsext_row']->pluginsext_params->hide_contest_qso:1;
+        $hide_ft8 = isset($_data['pluginsext_row']->pluginsext_params->hide_ft8)?$_data['pluginsext_row']->pluginsext_params->hide_ft8:1;
+        $_data['pluginsext_row']->list_qso = isset($_data['pluginsext_row']->pluginsext_params->nb_last_qso)?$this->model_lastqso($_data['_oUser'], $_data['pluginsext_row']->pluginsext_params->nb_last_qso,$filter_qso,$hide_contest_qso,$hide_ft8)->result():array();
+
+        $_data['page_title'] = "Last QSO for ".$_data['_oUser']->user_callsign;
+        $this->load->view('interface_assets/mini_header', $_data);
+        $this->load->add_package_path(APPPATH.$this->config->item('pluginsext_path').'/sharedata/');
+        $this->load->view('sharedata/lastqso');
+        $this->change_user_stylesheet(false);
+	}
+
+    public function onair($_data) {
+        $_onair_theme = isset($_data['pluginsext_row']->pluginsext_params->onair_theme)?$_data['pluginsext_row']->pluginsext_params->onair_theme:'cosmo';
+        $this->change_user_stylesheet($_onair_theme);
+        $_data = $this->get_onair($_data);
+        $_data['pe_json_return']['onair_state_txt'] = ($_data['pe_json_return']['onair_state']==1)?'ON AIR'.(($_data['pe_json_return']['onair_band']!='')?' ('.$_data['pe_json_return']['onair_band'].')':''):'not active';
+        $this->load->view('interface_assets/mini_header', $_data);
+        $this->load->add_package_path(APPPATH.$this->config->item('pluginsext_path').'/sharedata/');
+        $this->load->view('sharedata/onair');
+        $this->change_user_stylesheet(false);
     }
 
-    public function get_onair($returnecho=true) {
-        $this->_CLContext->load->model('logbook_model');
+    public function ws_setonair($_data) {
+        return $this->set_onair($_data);
+    }
+
+    public function ws_onair($_data) {
+        return $this->get_onair($_data);
+    }
+
+    private function set_onair($_data) {
+        $onair_state = str_replace('"', "", $this->input->post("onair_state"));
+        $_data['pluginsext_row']->pluginsext_values->onair_date = ($onair_state==1)?date('U'):'';
+        $_userid = ((isset($data['_oUser']))&&($data['_oUser']->user_id>0))?$data['_oUser']->user_id:$this->session->userdata('user_id');
+        $this->pluginsext_model->set_value($_data['pluginsext_row']->pluginsext_id, $_userid, $_data['pluginsext_row']->pluginsext_values);
+        if ($onair_state==1) {
+            $onair_icon = $_data['pluginsext_row']->pluginsext_params->onair_showon;
+        } else {
+            $onair_icon = $_data['pluginsext_row']->pluginsext_params->onair_showoff;
+        }
+        if ($_data['pluginsext_row']->pluginsext_params->onair_show_band != 1) $onair_band = '';
+        $_data['pe_json_return'] = array('onair_state'=>$onair_state,'onair_icon'=>'fa-'.$onair_icon);
+        return $_data;
+    }
+
+    private function get_onair($_data) {
+        $this->load->model('logbook_model');
         $onair_state = 0;
         $onair_band = '';
-        $value_json = json_decode($this->_pluginsext_user->pluginsext_values, true);
-        $data['last_qso'] = $this->_CLContext->logbook_model->get_last_qsos(1)->result();
-        if (count($data['last_qso'])>0) {
+        if (!isset($_data['_oUser'])) {
+            $_data['_oUser'] = $this->user_model->get_by_id($this->session->userdata('user_id'))->row();
+        }
+        $_data['sharedata_last_qso'] = $this->model_lastqso($_data['_oUser'], 1)->result();
+        if (count($_data['sharedata_last_qso'])>0) {
             $onair_dateref = 0;
-            if ($value_json['onair_date'] > strtotime($data['last_qso'][0]->COL_TIME_ON)) {
-                $onair_dateref = $value_json['onair_date'];
+            if ($_data['pluginsext_row']->pluginsext_values->onair_date > strtotime($_data['sharedata_last_qso'][0]->COL_TIME_ON)) {
+                $onair_dateref = $_data['pluginsext_row']->pluginsext_values->onair_date;
                 $onair_band = '';
             } else {
-                $onair_dateref = strtotime($data['last_qso'][0]->COL_TIME_ON);
-                $onair_band = ($data['last_qso'][0]->COL_SAT_NAME!='')?$data['last_qso'][0]->COL_SAT_NAME:$data['last_qso'][0]->COL_BAND;
+                $onair_dateref = strtotime($_data['sharedata_last_qso'][0]->COL_TIME_ON);
+                $onair_band = ($_data['sharedata_last_qso'][0]->COL_SAT_NAME!='')?$_data['sharedata_last_qso'][0]->COL_SAT_NAME:$_data['sharedata_last_qso'][0]->COL_BAND;
             }
-            if (($onair_dateref+($this->_pluginsext_user->pluginsext_params->onair_timeout*60)) >= date('U')) {
-                $value_json['onair_date'] = $onair_dateref;
+            if (($onair_dateref+($_data['pluginsext_row']->pluginsext_params->onair_timeout*60)) >= date('U')) {
+                $_data['pluginsext_row']->pluginsext_values->onair_date = $onair_dateref;
                 $onair_state = 1;
             } else {
-                $value_json['onair_date'] = '';
+                $_data['pluginsext_row']->pluginsext_values->onair_date = '';
                 $onair_band = '';
                 $onair_dateref = 0;
             }  
-            $this->_CLContext->pluginsext_model->set_value($this->_pluginsext_user->pluginsext_id, $this->_user_id, $value_json);
+            $this->pluginsext_model->set_value($_data['pluginsext_row']->pluginsext_id, $_data['_oUser']->user_id, $_data['pluginsext_row']->pluginsext_values);
         }
         if ($onair_state==1) {
-            $onair_icon = $this->_pluginsext_user->pluginsext_params->onair_showon;
+            $onair_icon = $_data['pluginsext_row']->pluginsext_params->onair_showon;
         } else {
-            $onair_icon = $this->_pluginsext_user->pluginsext_params->onair_showoff;
+            $onair_icon = $_data['pluginsext_row']->pluginsext_params->onair_showoff;
         }
-        if ($this->_pluginsext_user->pluginsext_params->onair_show_band != 1) $onair_band = '';
-        $return = json_encode(array('message'=>'OK','onair_state'=>$onair_state,'onair_band'=>$onair_band, 'onair_icon'=>'fa-'.$onair_icon));
-        if ($returnecho) echo $return; else return $return;            
+        if ($_data['pluginsext_row']->pluginsext_params->onair_show_band != 1) $onair_band = '';
+        $_data['pe_json_return'] = array('onair_state'=>$onair_state,'onair_band'=>$onair_band, 'onair_icon'=>'fa-'.$onair_icon);
+        return $_data;
     }
 	
+
+    // --- MODEL -------------------------------------------------------------- //
+    
+    private function model_lastqso($_oUser=null, $nb=10,$filter=null,$hidecontest=true,$hideft8=true) {
+        if (!$_oUser) return false;
+
+        $this->load->model('logbooks_model');
+        $logbooks_locations_array = $this->logbooks_model->list_logbook_relationships($_oUser->active_station_logbook);
+        if(!empty($logbooks_locations_array)) {
+            $this->db->select('COL_CALL, COL_BAND, COL_FREQ, COL_TIME_ON, COL_RST_RCVD, COL_RST_SENT, COL_MODE, COL_SUBMODE, COL_NAME, COL_COUNTRY, COL_PRIMARY_KEY, COL_SAT_NAME, COL_STATION_CALLSIGN, COL_MY_GRIDSQUARE');
+            if ($hidecontest) { $this->db->where(" (COL_CONTEST_ID IS NULL OR COL_CONTEST_ID='') "); }
+            if ($hideft8) { $this->db->where(" !( ((COL_MODE = 'MFSK')&&(COL_SUBMODE = 'FT4')) || (COL_MODE = 'FT8') ) "); }
+            if ($filter) { $this->db->where($filter); }
+            $this->db->where_in('station_id', $logbooks_locations_array);
+            $this->db->order_by("COL_TIME_ON", "desc");
+            $this->db->limit($nb);
+            return $this->db->get($this->config->item('table_name'));
+        } else {
+            return false;
+        }
+    }
 }

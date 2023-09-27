@@ -10,43 +10,35 @@ class Pluginsext_Model extends CI_Model {
 
     private $table_name = 'pluginsext';
     private $table_name_user = 'pluginsext_users';
+    private $table_name_data = 'pluginsext_plugindata';
     
-//    function __construct() {
-//        parent::__construct();
-//    }
-
-    // FUNCTION : array list_all()
     // return list of all plugin //
     function list_all() {
         return $this->db->get($this->table_name);
     }
 
-    // FUNCTION: object list_for_user($userid)
     // return list of user
     function list_for_user($userid) {
         $this->db->where('pluginsext_user_id', $this->security->xss_clean($userid));
-        $r = $this->db->get('pluginsext_users');
+        $r = $this->db->get($this->table_name_user);
         return $r;
     }
     
-    // FUNCTION: object get_by_name($pluginsextname)
-    // Retrieve a plugin
-    function get_by_name($pluginsextname) {
-        $this->db->where('pluginsext_name', $this->security->xss_clean($pluginsextname));
+    // return one plugin by nameid
+    function get_by_nameid($pluginsextnameid) {
+        $this->db->where('pluginsext_nameid', $this->security->xss_clean($pluginsextnameid));
         $r = $this->db->get($this->table_name);
         return $r;
     }
 
-    // FUNCTION: object get_by_id($id,$user_id)
-    // Retrieve a user by user ID
-    function get_by_id($id, $user_id=0) {
+    // return one plugin by id
+    function get_by_id($id) {
         $this->db->where('pluginsext_id', $this->security->xss_clean($id));
         $r = $this->db->get($this->table_name);
         return $r;
     }
 
-    // FUNCTION: object get_by_id($user_id)
-    // Retrieve a user by user ID
+    // return list of plugin by user id
     function get_by_user($user_id,$user_allow=null) {
         $this->security->xss_clean($user_id);
         $sql = 'SELECT m.*, mu.pluginsext_user_allow, mu.pluginsext_params FROM pluginsext m LEFT JOIN pluginsext_users mu ON m.pluginsext_id = mu.pluginsext_id WHERE mu.pluginsext_user_id='.$user_id;
@@ -55,8 +47,7 @@ class Pluginsext_Model extends CI_Model {
         return $r;
     }
     
-    // FUNCTION: object get_by_id($id,$user_id)
-    // Retrieve param user by user ID
+    // return param of plugin by id and user id
     function get_params_user_by_id($id, $user_id) {
         $this->db->where('pluginsext_id', $this->security->xss_clean($id));
         $this->db->where('pluginsext_user_id', $this->security->xss_clean($user_id));
@@ -65,8 +56,7 @@ class Pluginsext_Model extends CI_Model {
     }
     
 
-    // FUNCTION: object set_value($id,$user_id)
-    // Update value
+    // set value of param for a plugin by id and user id
     function set_value($id, $user_id, $pluginsext_values) {
         $data['pluginsext_values'] = json_encode($pluginsext_values);
         $this->db->where('pluginsext_id', $id);
@@ -74,17 +64,17 @@ class Pluginsext_Model extends CI_Model {
         $this->db->update($this->table_name_user, $data); 
     }
     
-    // FUNCTION : array save()
-    // save a new plugin in table //
+    // save plugin by id
     function save($fields) {
         $data = array(
+            'pluginsext_nameid' => xss_clean($fields['pluginsext_nameid']),
             'pluginsext_name' => xss_clean($fields['pluginsext_name']),
             'pluginsext_allow' => xss_clean($fields['pluginsext_allow']),
-            'pluginsext_migration' => xss_clean($fields['pluginsext_migration']),
+            'pluginsext_migration' => $fields['pluginsext_migration'],
         );
         if(isset($fields['pluginsext_info'])) { $data['pluginsext_info'] = xss_clean($fields['pluginsext_info']); }
         if(isset($fields['pluginsext_config'])) { $data['pluginsext_config'] = xss_clean($fields['pluginsext_config']); }
-
+        
         if (isset($fields['pluginsext_id']) && ($fields['pluginsext_id']>0)) {
             $this->db->where('pluginsext_id', xss_clean($fields['pluginsext_id']));
             $this->db->update($this->table_name, $data); 
@@ -93,8 +83,7 @@ class Pluginsext_Model extends CI_Model {
         }
     }
 
-    // FUNCTION : array save()
-    // save a new plugin in table //
+    // set param for a plugin by id and user id
     function save_params_user($fields, $user_id) {
         $fields = $this->_convertFieldsIsArray2json($fields);
         $data = array(
@@ -113,8 +102,7 @@ class Pluginsext_Model extends CI_Model {
         }
     }
 
-    // FUNCTION: object list_merge_data
-    // Search fiedls name with __ and convert to array/json
+    // merge list of plugin and allow by users
     function list_merge_data($list_pluginsext, $list_pluginsext_for_user) {
         $alist_pluginsext_for_user = array();
         foreach ($list_pluginsext_for_user->result() as $row) { $alist_pluginsext_for_user[$row->pluginsext_id] = (array)$row; }
@@ -129,13 +117,59 @@ class Pluginsext_Model extends CI_Model {
                 $arow['pluginsext_user_allow'] = 0;
                 $arow['pluginsext_params'] = '{}';
             }
-            $alist_pluginsext[] = (object)$arow;
+            $alist_pluginsext[$arow['pluginsext_nameid']] = (object)$arow;
         }
+        ksort($alist_pluginsext);
         return $alist_pluginsext;
     }
 
-    // FUNCTION: array _convertFieldsIsArray2json
-    // Search fiedls name with __ and convert to array/json
+    
+    // -- DATA --------------------------------------------------- //
+    // save data of plugin //
+    function save_pluginsdata($fields, $user_id) {
+        $fields = $this->_convertFieldsIsArray2json($fields);
+        $data = array(
+            'pluginsext_id' => xss_clean($fields['pluginsext_id']),
+            'pluginsext_user_id' => $user_id,
+            'pluginsdata_data' => ((isset($fields['pluginsdata_data']))?xss_clean($fields['pluginsdata_data']):'{}'),
+        );
+        // TEST du get_data_by_id pour refuser si user et data //
+        if (isset($fields['pluginsdata_id']) && ($fields['pluginsdata_id']>0)) {
+            $this->db->where('pluginsdata_id', xss_clean($fields['pluginsdata_id']));
+            $this->db->update($this->table_name_data, $data); 
+        } else {
+            $this->db->insert($this->table_name_data, $data);
+        }
+    }
+
+    // delete data of plugin //
+    function delete_pluginsdata($data_id, $user_id) {
+        if ($data_id>0) {
+            $this->db->where('pluginsdata_id', xss_clean($data_id));
+            if ($this->db->delete($this->table_name_data)) return true;
+        }
+        return false;
+    }
+
+    // return one plugin by id
+    function get_data_by_id($pluginsdata_id,$pluginsext_id=false) {
+        $this->db->where('pluginsdata_id', $this->security->xss_clean($pluginsdata_id));
+        if ($pluginsext_id !== FALSE) $this->db->where('pluginsext_id', $this->security->xss_clean($pluginsext_id));
+        $this->db->where('pluginsext_user_id', $this->security->xss_clean($this->session->userdata('user_id')));
+        $r = $this->db->get($this->table_name_data);
+        return $r;
+    }
+
+    // return list of data for user
+    function get_data_list_for_user($pluginsext_user_id,$pluginsext_id) {
+        $this->db->where('pluginsext_user_id', $this->security->xss_clean($pluginsext_user_id));
+        $this->db->where('pluginsext_id', $this->security->xss_clean($pluginsext_id));
+        $r = $this->db->get($this->table_name_data);
+        return $r;
+    }
+
+    // -- GENERIC --------------------------------------------------- //
+    // search fiedls name with __ and convert to array/json
     private function _convertFieldsIsArray2json($fields) {
         $aSet = array();
         foreach($fields as $f => $fv) {
@@ -146,13 +180,11 @@ class Pluginsext_Model extends CI_Model {
                 unset($fields[$f]);
             }
         } 
-        foreach($aSet as $v) {
-            $fields[$v] = json_encode($fields[$v]);
-        }
+        foreach($aSet as $v) { $fields[$v] = json_encode($fields[$v]); }
         return $fields;
     }
     
-    // FUNCTION : array convertJson2Fields
+    // convert json to fields
     function convertJson2Fields($array, $jsonField) {
         if (!is_array($jsonField)) { $jsonField = array($jsonField); }
         foreach($jsonField as $jsonFieldName) {
@@ -162,8 +194,16 @@ class Pluginsext_Model extends CI_Model {
         return $array;
     }
 
-    // FUNCTION : array convertJson2Fields
-    function convertUrlForMainMenu($url) {
+    // convert json to fields
+    function setArray($aFullEmtpy, $aData, $subarray_name="") {
+        if (!empty($subarray_name)) { $subarray_name = $subarray_name."__"; }
+        foreach($aData as $_k=>$_v) { $aFullEmtpy[str_replace($subarray_name,"",$_k)] = $_v; }
+        return $aFullEmtpy;
+    }
+
+    // FUNCTION : convertUrlForMainMenu($url)
+    // convert url for javascript or other
+    /*function convertUrlForMainMenu($url) {
         $return = $url;
         switch(substr($url,0,2)) {
             case "js":
@@ -174,8 +214,7 @@ class Pluginsext_Model extends CI_Model {
                 break;
         } 
         return $return;
-    }
-    
+    }*/
 }
 
 ?>

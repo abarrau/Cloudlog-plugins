@@ -1,5 +1,5 @@
 <div class="sharedata_onair_main">
-    <span class="sharedata_onair"><i class="fas <?php echo $onair_icon;?>"></i> <span class="sharedata_onair_txt"><?php echo $onair_txt;?></span></span>
+    <span class="sharedata_onair"><i class="fas <?php echo $pe_json_return['onair_icon'];?>"></i> <span class="sharedata_onair_txt"><?php echo $pe_json_return['onair_state_txt'];?></span></span>
 </div>
 <style>
 .sharedata_onair_main { padding:5px; }

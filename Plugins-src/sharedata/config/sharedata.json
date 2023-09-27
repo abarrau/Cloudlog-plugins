@@ -1,13 +1,15 @@
 {
-    "name":"sharedata",
+    "nameid":"sharedata",
+    "name":"Share your data",
     "author":"f4ans",
-    "source":"https://github.com/abarrau",
-    "version":"1.1",
+    "source":"https://github.com/abarrau/Cloudlog-plugins",
+    "version":"1.2",
     "migration":"000",
     "description":"This external plugins can share data (last qso, or if you are on air) into an iframe web page",
     "config":{ 
-        "is_public_plugins":1, 
-        "href_main_menu":0,
-        "js_include":1
+        "is_public_plugins":1,
+        "js_include":1,
+        "top_main_add_menu":0,
+        "top_main_add_infozone":1
     }
 }

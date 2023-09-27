@@ -8,6 +8,8 @@
     "config":{ 
         "is_public_plugins":0, 
         "href_main_menu":0,
-        "js_include":0
+        "js_include":0,
+        "top_main_add_menu":0,
+        "top_main_add_infozone":0
     }
 }

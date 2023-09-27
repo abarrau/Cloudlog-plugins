@@ -2,226 +2,210 @@
 
 class Pluginsext extends CI_Controller {
 
-    private $pluginsext_current = array();
-
-
     // load construct //
-	function __construct()
-	{
+	function __construct() {
         parent::__construct();
         $this->lang->load('pluginsext');
         $this->load->model('pluginsext_model');
+        $this->load->model('user_model');
     }
             
     // default methode : list plugins //
     public function index() {
+        if($this->user_model->validate_session() == 0) { redirect('user/login'); }
         // check new plugin exist in folder //
         $this->check_new_update_pluginsext(true);
-        
+        // set data //
         $list_pluginsext = $this->pluginsext_model->list_all();
         $list_pluginsext_for_user = $this->pluginsext_model->list_for_user($this->session->userdata('user_id'));
         $data['list_pluginsext'] = $this->pluginsext_model->list_merge_data($list_pluginsext, $list_pluginsext_for_user);
-   
         $data['page_title'] = $this->lang->line('pluginsext_title_page');
-        
+        // load view //
         $this->load->view('interface_assets/header', $data);
         $this->load->view('pluginsext/index');
         $this->load->view('interface_assets/footer');
     }
 
     // edit an external plugin //
+    // argument : 
+    //      segment(3) : methode //
     public function edit() {
+        if($this->user_model->validate_session() == 0) { redirect('user/login'); }
+        // UPDATE FORMULAIRE //
+        $_post = $this->input->post();
         $this->load->library('form_validation');
-        
-        $data['page_title'] = $this->lang->line('pluginsext_title_page');
-        $data['pluginsext_id'] = $this->uri->segment(3);
-        $pluginsext_q = $this->pluginsext_model->get_by_id($data['pluginsext_id']);
-        $data['pluginsext_data'] = $pluginsext_q->row();
-        // Verif if plugin can be editable //
-        if ($data['pluginsext_data']->pluginsext_allow != 1) {
-            if (isset($data['pluginsext_data']->pluginsext_name)) {
-                $this->session->set_flashdata('message', $data['pluginsext_data']->pluginsext_name.' : this external pluginsext can not be edited, because is not enable.');
-            } else {
-                $this->session->set_flashdata('message', 'External plugin not exist.');
-            }
-            redirect('pluginsext');               
-        }
-
-        $pluginsext_q = $this->pluginsext_model->get_params_user_by_id($data['pluginsext_id'], $this->session->userdata('user_id'));
-
-        if (isset($pluginsext_q->row()->pluginsext_user_allow)) {
-            $data['pluginsext_data']->pluginsext_user_allow = $pluginsext_q->row()->pluginsext_user_allow;
-            $data['pluginsext_data']->pluginsext_params = $pluginsext_q->row()->pluginsext_params;
-        } else {
-            $data['pluginsext_data']->pluginsext_user_allow = 0;
-            $data['pluginsext_data']->pluginsext_params = '{}';
-        }
-        $class_name = $data['pluginsext_data']->pluginsext_name;
-        
-        $data['pluginsext_params'] = json_decode($data['pluginsext_data']->pluginsext_params);
-        $data['pluginsext_info'] = json_decode($data['pluginsext_data']->pluginsext_info);
-        
-        $data['title_edit'] = $this->lang->line('pluginsext_edit').' : '.$data['pluginsext_data']->pluginsext_name;
-        $data['pluginsext_path'] = APPPATH.$this->config->item('pluginsext_path').'/'.$data['pluginsext_data']->pluginsext_name;
-        $data['pluginsext_error_filenotfound'] =  $this->lang->line('pluginsext_error_filenotfound').' :  /views/cl_pluginsext_edit.php !';
-        $data['cancel_confirm_txt'] = str_replace("'","\'",$this->lang->line('pluginsext_cancel_confirm_txt'));
-        
         $this->form_validation->set_rules('pluginsext_user_allow', 'Allow', 'required');
-        
-        if ($this->form_validation->run() == FALSE)
-        {
-            // load plugin class //
-            if (file_exists($data['pluginsext_path'].'/controllers/'.ucfirst($class_name).'.php')) { 
-                // load extands of plugin class //
-                require_once(APPPATH.'controllers/Pluginsext_extands.php'); 
-                require_once($data['pluginsext_path'].'/controllers/'.ucfirst($class_name).'.php');  
-            }
-            // load method for specific information //
-            if (method_exists(ucfirst($class_name), 'cl_pluginsext_edit')) {
-                $CPLUGINSEXT = new $class_name($this, true);
-                $data = $CPLUGINSEXT->cl_pluginsext_edit($data);
-            }
-            // load specifiqe lang //
-            $this->lang->load($class_name,'',FALSE,TRUE, $data['pluginsext_path'].'/');
-    	    $this->load->view('interface_assets/header', $data);
-            $this->load->view('pluginsext/edit');
-            $this->load->view('interface_assets/footer');
-        }
-        else
-        {
-            unset($data);
-            $this->pluginsext_model->save_params_user($this->input->post(), $this->session->userdata('user_id'));
-            $this->session->set_flashdata('success', $class_name.' : this external plugin was updated.');
+        if ($this->form_validation->run() !== FALSE) {
+            $this->pluginsext_model->save_params_user($_post, $this->session->userdata('user_id'));
+            $this->session->set_flashdata('success', $_post['pluginsext_name'].' ('.$_post['pluginsext_id'].'): this external plugin was updated.');
             redirect('pluginsext');
         }
+
+        // LOAD FORMULAIRE //
+        $data['pluginsext_id'] = $this->uri->segment(3);
+        // verif if plugin can used & get info plugin for user //
+        $data = $this->cheack_is_allow($data);
+        if ($data['_msg_error']['s'] == 'ne') { 
+            $this->session->set_flashdata('message', $data['_msg_error']['t']);
+            redirect('pluginsext');
+        }
+        if ($data['_msg_error']['s'] == 'na') { $this->session->set_flashdata('message', $data['_msg_error']['t']); }
+
+        // Set data //
+        $data['page_title'] = $this->lang->line('pluginsext_title_page');
+        $data['title_edit'] = $this->lang->line('pluginsext_title_edit').' : '.$data['pluginsext_row']->pluginsext_name.' ('.$data['pluginsext_row']->pluginsext_nameid.')';
+        $data['pluginsext_path'] = APPPATH.$this->config->item('pluginsext_path').'/'.$data['pluginsext_row']->pluginsext_nameid; 
+        $data['pluginsext_error_filenotfound'] =  $this->lang->line('pluginsext_error_filenotfound').' :  /views/cl_pluginsext_edit.php !';
+        $data['cancel_confirm_txt'] = str_replace("'","\'",$this->lang->line('pluginsext_cancel_confirm_txt'));
+        // load plugin class //
+        $this->load_pluginext_class($data['pluginsext_row']->pluginsext_nameid);
+        $_pe_class = ucfirst($data['pluginsext_row']->pluginsext_nameid);
+        if (method_exists($this->$_pe_class, 'cl_pluginsext_edit')) {
+            $data = $this->$_pe_class->cl_pluginsext_edit($data);
+        }
+        // load view //
+        $this->load->view('interface_assets/header', $data);
+        $this->load->view('pluginsext/edit');
+        $this->load->view('interface_assets/footer');
     }
 
-
     // menu(): Execute plugin from menu //
+    // argument : 
+    //      segment(3) : nameid of plugin, obligatory //
+    //      segment(4) : methode //
+    //      segment(5 > 7) : 3 arguments for the methode , optionnal //
     public function menu() {
-        $this->load->model('user_model');
-        if(!$this->user_model->authorize(99)) { $this->session->set_flashdata('notice', 'You\'re not allowed to do that!'); redirect('dashboard'); }
+        if($this->user_model->validate_session() == 0) { redirect('user/login'); }
+        // get arguments //
+        $data['pluginsext_nameid'] = $this->uri->segment(3);
+        $data['methode_name'] = $this->uri->segment(4);
+        $data['methode_args'] = array('arg1'=>$this->uri->segment(5), 'arg2'=>$this->uri->segment(6), 'arg3'=>$this->uri->segment(7));
         
-        $data['pluginsext_id'] = $this->uri->segment(3);
-        $pluginsext_q = $this->pluginsext_model->get_by_id($data['pluginsext_id']);
-        $data['pluginsext_data'] = $pluginsext_q->row();
-        // Verif if plugin can be editable //
-        $allow = false;
-        if ($data['pluginsext_data']->pluginsext_allow == 1) {
-            $pluginsext_q = $this->pluginsext_model->get_params_user_by_id($data['pluginsext_id'], $this->session->userdata('user_id'));
-            if (isset($pluginsext_q->row()->pluginsext_user_allow)) {
-                $allow = true;
-            }
+        // verif if plugin can used & get info plugin for user //
+        $data = $this->cheack_is_allow($data);
+        if ($data['_msg_error']['s'] == 'ne') { 
+            $this->session->set_flashdata('message', $data['_msg_error']['t']);
+            redirect('pluginsext');
         }
-        if ($allow) {
-            $data['title_menu'] = $data['pluginsext_data']->pluginsext_name;
-            $data['pluginsext_path'] = APPPATH.$this->config->item('pluginsext_path').'/'.$data['pluginsext_data']->pluginsext_name;
-            $data['pluginsext_error_filenotfound'] =  $this->lang->line('pluginsext_error_filenotfound').' :  /views/cl_pluginsext_menu.php !';
-            $data['pluginsext_data']->pluginsext_params = $pluginsext_q->row()->pluginsext_params;
-
-            $pluginsext_q = $this->pluginsext_model->get_params_user_by_id($data['pluginsext_id'], $this->session->userdata('user_id'));
-            $class_name = $data['pluginsext_data']->pluginsext_name;
-            
-           // load plugin class //
-            if (file_exists($data['pluginsext_path'].'/controllers/'.ucfirst($class_name).'.php')) { 
-                // load extands of plugin class //
-                require_once(APPPATH.'controllers/Pluginsext_extands.php'); 
-                require_once($data['pluginsext_path'].'/controllers/'.ucfirst($class_name).'.php');  
-            }
-            // load method for specific information //
-            if (method_exists(ucfirst($class_name), 'cl_pluginsext_menu')) {
-                $CPLUGINSEXT = new $class_name($this);
-                $data = $CPLUGINSEXT->cl_pluginsext_menu($data);
-            }
-        } else {
+        if ($data['_msg_error']['s'] != 'ok') {
+            $this->session->set_flashdata('message', $data['_msg_error']['t']);
             $data['title_menu'] = 'ERROR';
             $data['pluginsext_path'] = '';
-            $data['pluginsext_error_filenotfound'] =  'No external plugin found';
         }
-        
+
+        if (!isset($data['pluginsext_path'])) $data['pluginsext_path'] = APPPATH.$this->config->item('pluginsext_path').'/'.$data['pluginsext_row']->pluginsext_nameid; 
+        $data['page_title'] = $this->lang->line('pluginsext_title_page')." / ".$data['pluginsext_row']->pluginsext_name;
+        $data['title_menu'] = $data['pluginsext_row']->pluginsext_name;
+
+        // load plugin class & call method //
+        if (empty($data['methode_name'])) $data['methode_name'] = "cl_pluginsext_menu";
+		$this->load_pluginext_class($data['pluginsext_row']->pluginsext_nameid);
+        $_pe_class = ucfirst($data['pluginsext_row']->pluginsext_nameid);
+        $data['pluginsext_url2menu'] = $this->$_pe_class->get_url_menu($data['pluginsext_nameid']);
+        if (method_exists($this->$_pe_class, $data['methode_name'])) {
+            $_m = $data['methode_name'];
+			$data = $this->$_pe_class->$_m($data);
+        }
+        // load view //
         $this->load->view('interface_assets/header', $data);
         $this->load->view('pluginsext/menu');
         $this->load->view('interface_assets/footer');
     }
 
+    // ws(): Execute plugin from ws/ajax request //
+    // argument : 
+    //      segment(3) : nameid of plugin, obligatory //
+    //      segment(4) : methode //
+    //      segment(5 > 7) : 3 arguments for the methode , optionnal //
+    public function ws() {
+        if($this->user_model->validate_session() == 0) { 
+            header('Content-Type: application/json');
+            echo json_encode(array('pe_stat'=>'KO','pe_msg'=>'ERROR: User not authentified !'));
+            return false;
+        }
+        // get arguments //
+        $data['pluginsext_nameid'] = $this->uri->segment(3);
+        $data['methode_name'] = $this->uri->segment(4);
+        $data['methode_args'] = array('arg1'=>$this->uri->segment(5), 'arg2'=>$this->uri->segment(6), 'arg3'=>$this->uri->segment(7));
+        // verif if plugin can used & get info plugin for user //
+        $data = $this->cheack_is_allow($data);
+        if (($data['_msg_error']['s'] == 'ok') && (!empty($data['methode_name']))) {
+            $data['pluginsext_path'] = APPPATH.$this->config->item('pluginsext_path').'/'.$data['pluginsext_row']->pluginsext_nameid;
+            // load plugin class & call method //
+            $this->load_pluginext_class($data['pluginsext_row']->pluginsext_nameid);
+            $_pe_class = ucfirst($data['pluginsext_row']->pluginsext_nameid);
+            if (method_exists($this->$_pe_class, $data['methode_name'])) {
+                $_m = $data['methode_name'];
+                $data = $this->$_pe_class->$_m($data);
+                if (!isset($data['pe_json_return']['pe_stat'])) { $data['pe_json_return']['pe_stat'] = 'OK'; }
+                header('Content-Type: application/json');
+                echo json_encode($data['pe_json_return']);
+                return true;          
+            }
+        }
+        header('Content-Type: application/json');
+        echo json_encode(array('pe_stat'=>'KO','pe_msg'=>'ERROR: this method not allowed or not found : '.$data['methode_name']));
+        return false;
+    }
 
     // ex(): Execute plugin //
     // argument : 
-    //      segment(3) : user id //
+    //      segment(3) : username (associate of user id)) //
     //      segment(4) : name of plugin, obligatory //
     //      segment(5) : name of methode, obligatory (index is not a default) //
     //      segment(6 > 8) : 3 arguments for the methode , optionnal //
     public function ex() {
-        $this->load->model('user_model');
-        
-        $user_id = $this->uri->segment(3);
-        $class_name = $this->uri->segment(4);
-        $method = $this->uri->segment(5);
-        $args = array('arg1'=>$this->uri->segment(6), 'arg2'=>$this->uri->segment(7), 'arg3'=>$this->uri->segment(8));
-        
-        // test class/plugin exist //
-        $pluginsext_q = $this->pluginsext_model->get_by_name($class_name);
-        if ($pluginsext_q->num_rows() == 0) {
-            echo "<b>Error : External plugin name (".$class_name.") not exist !<br/><br/></b>";
+        // get arguments //
+        $data['_username'] = $this->uri->segment(3);
+        $data['pluginsext_nameid'] = $this->uri->segment(4);
+        $data['methode_name'] = $this->uri->segment(5);
+        $data['methode_args'] = array('arg1'=>$this->uri->segment(6), 'arg2'=>$this->uri->segment(7), 'arg3'=>$this->uri->segment(8));
+
+        // verif username exist //
+        $data['_oUser'] = $this->user_model->get($data['_username'])->row();
+        if (!is_object($data['_oUser'])) {
+            echo "<b>Error : Username (".$data['_username'].") not exist !<br/><br/></b>";
             show_404();
         }
-        // test plugin can be use //
-        $pluginsext_config = json_decode($pluginsext_q->row()->pluginsext_config);
-        if (($pluginsext_q->row()->pluginsext_allow != 1) || ($pluginsext_config->is_public_plugins != 1)) {
-            echo "<b>Error : External plugin (".$class_name.") not enable !<br/><br/></b>";
+        // verif if plugin can used & get info plugin for user //
+        $data = $this->cheack_is_allow($data);
+        if ($data['_msg_error']['s'] != 'ok') { 
+            echo "<b>Error : External plugin (".$data['pluginsext_nameid'].") : ".$data['_msg_error']['t']." !<br/><br/></b>";
             show_404();
         }
-        
-        // load plugin class //
-        $pluginsext_path = APPPATH.$this->config->item('pluginsext_path').'/'.$class_name;
-        if (file_exists($pluginsext_path.'/controllers/'.ucfirst($class_name).'.php')) { 
-            // load extands of plugin class //
-            require_once(APPPATH.'controllers/Pluginsext_extands.php');  
-            require_once($pluginsext_path.'/controllers/'.ucfirst($class_name).'.php');    
-                           
-            // test if this plugin is actived for this user //
-            $pluginsext_user = $this->pluginsext_model->get_params_user_by_id($pluginsext_q->row()->pluginsext_id, $user_id);
-            if ($pluginsext_user->num_rows() == 0) {
-                echo "<b>Error : External plugin is not active !<br/><br/></b>";
-                show_404();
-            }
-            if ($pluginsext_user->row()->pluginsext_user_allow != 1) {
-                echo "<b>Error : External plugin is not active !<br/><br/></b>";
-                show_404();
-            } 
-            // load method for specific information //
-            if (!method_exists(ucfirst($class_name), $method)) {
-                echo "<b>Error : External plugin mehtod (".$class_name.":".$method.") not exist !<br/><br/></b>";
-                show_404();
-            }
-            $pluginsext_user->row()->pluginsext_params = json_decode($pluginsext_user->row()->pluginsext_params);
-            $CPLUGINSEXT = new $class_name($this, false, $pluginsext_user->row(), $args, $user_id);
-            $CPLUGINSEXT->$method();
-            
+        $data['page_title'] = $this->lang->line('pluginsext_title_page')." / ".$data['pluginsext_row']->pluginsext_name;
+        // load plugin class & call method //
+        $this->load_pluginext_class($data['pluginsext_row']->pluginsext_nameid);
+        $_pe_class = ucfirst($data['pluginsext_row']->pluginsext_nameid);
+        if (method_exists($this->$_pe_class, $data['methode_name'])) {
+            $_m = $data['methode_name'];
+            $data = $this->$_pe_class->$_m($data);
         } else {
-            echo "<b>Error : External plugin file (".$class_name.") not exist !<br/><br/></b>";
-            show_404();
+            echo "<b>Error : External plugin (".$data['pluginsext_nameid'].") : method not exist !<br/><br/></b>";
+            show_404();            
         }
     }
 
-        // Check folder : new or update //
+    // Check folder : new or update //
  	public function check_new_update_pluginsext() {
         $list_pluginsext_folder = $this->get_pluginsext_folder_list();
-        foreach($list_pluginsext_folder as $pluginsext_name) {
-            $pluginsext_q = $this->pluginsext_model->get_by_name($pluginsext_name);
+        foreach($list_pluginsext_folder as $pluginsext_nameid) {
+            $pluginsext_q = $this->pluginsext_model->get_by_nameid($pluginsext_nameid);
             // get Json info file //
             $pluginsext_info_json = '{}';
             $pluginsext_config_json = '{}';
-            if (file_exists(APPPATH.$this->config->item('pluginsext_path').'/'.$pluginsext_name.'/config/'.$pluginsext_name.'.json')) {
-                $pluginsext_info_json = file_get_contents(APPPATH.$this->config->item('pluginsext_path').'/'.$pluginsext_name.'/config/'.$pluginsext_name.'.json');
+            $pluginsext_name = $pluginsext_nameid;
+            if (file_exists(APPPATH.$this->config->item('pluginsext_path').'/'.$pluginsext_nameid.'/config/'.$pluginsext_nameid.'.json')) {
+                $pluginsext_info_json = file_get_contents(APPPATH.$this->config->item('pluginsext_path').'/'.$pluginsext_nameid.'/config/'.$pluginsext_nameid.'.json');
                 if (!empty($pluginsext_info_json)) { $pluginsext_info_json = json_decode($pluginsext_info_json); }
                 if (isset($pluginsext_info_json->config)) {
                     $pluginsext_config_json = $pluginsext_info_json->config;
                     unset($pluginsext_info_json->config);
                 }
+                if (isset($pluginsext_info_json->name)) { $pluginsext_name = $pluginsext_info_json->name; }
             }
             $doSave = false;
-            $fileds = array('pluginsext_id'=>0, 'pluginsext_name'=>$pluginsext_name, 'pluginsext_allow'=>1, 'pluginsext_migration'=>0, 'pluginsext_info'=>json_encode($pluginsext_info_json), 'pluginsext_config'=>json_encode($pluginsext_config_json));
+            $fileds = array('pluginsext_id'=>0, 'pluginsext_nameid'=>$pluginsext_nameid, 'pluginsext_name'=>$pluginsext_name, 'pluginsext_allow'=>1, 'pluginsext_migration'=>0, 'pluginsext_info'=>json_encode($pluginsext_info_json), 'pluginsext_config'=>json_encode($pluginsext_config_json));
             if ($pluginsext_q->num_rows() == 1) {
                 $fileds['pluginsext_id'] = $pluginsext_q->row()->pluginsext_id;
                 $fileds['pluginsext_allow'] = $pluginsext_q->row()->pluginsext_allow;
@@ -238,7 +222,7 @@ class Pluginsext extends CI_Controller {
                     //$this->load->library('Migration', $migration);
                     //$this->migration->find_migrations();
                 }*/
-            } else { $doSave = true; }
+            } else { $doSave = true; } // why true ?
             if ($doSave) { $this->pluginsext_model->save($fileds); }
         }
     }
@@ -259,12 +243,64 @@ class Pluginsext extends CI_Controller {
         return $list_folder_pluginsext;
     }
     
-    // return url of ex() methode //
-    public function get_url_ex($pluginsext_name, $method) {
-        return "index.php/pluginsext/ex/".$this->session->userdata('user_id')."/".$pluginsext_name."/".$method;
+    // load pluginext class //
+    private function load_pluginext_class($_class) {
+        $this->load->file(APPPATH.'controllers/Pluginsext_extands.php');
+        $_cn = ucfirst($_class);
+        $this->$_cn =& load_class($_cn, $this->config->item('pluginsext_path').'/'.$_class.'/controllers');
+        // load specifiqe lang //
+        $this->lang->load($_class,'',FALSE,TRUE, APPPATH.$this->config->item('pluginsext_path').'/'.$_class.'/');
+        return $this;
     }
 
+    // verif pluginext allow for user //
+    private function cheack_is_allow($_data, $external=false) {
+        $_msg_notexist = "External plugin not exist";
+        $_msg_notactiv = "External plugin is not active";
+        $_data['_msg_error'] = array('s'=>'ok','t'=>'');
+        // verif is plugin exist //
+        if (isset($_data['pluginsext_nameid']) && (!empty($_data['pluginsext_nameid']))) {
+            $pluginsext_q = $this->pluginsext_model->get_by_nameid($_data['pluginsext_nameid']);
+        } else if (isset($_data['pluginsext_id']) && ($_data['pluginsext_id']>0)) {
+            $pluginsext_q = $this->pluginsext_model->get_by_id($_data['pluginsext_id']);
+        } else {
+            $_data['_msg_error'] = array('s'=>'ne', 't'=>$_msg_notexist.' (id error)');
+            return $_data;            
+        } 
+        // get info et verif is plugin exist //
+        $_data['pluginsext_row'] = $pluginsext_q->row();
+		if ((!is_object($_data['pluginsext_row'])) || (!isset($_data['pluginsext_row']->pluginsext_nameid))) {
+			$_data['_msg_error'] = array('s'=>'ne', 't'=>$_msg_notexist.' (not object)');
+			return $_data;
+		}
+        $_data['pluginsext_id'] = $_data['pluginsext_row']->pluginsext_id;
+        // verif plugin allow on cloudlog //
+        if ($_data['pluginsext_row']->pluginsext_allow != 1) {
+			$_data['pluginsext_row']->pluginsext_user_allow = 0;
+			$_data['pluginsext_row']->pluginsext_params = json_decode('{}');
+            //$_data['pluginsext_row']->pluginsext_values = json_decode('{}');
+			$_data['_msg_error'] = array('s'=>'ne', 't'=>$_msg_notexist.' (not allowed)');
+			return $_data;
+        }
+        // if allow, get param of this plugin for current user //
+		$_userid = ((isset($_data['_oUser']))&&($_data['_oUser']->user_id>0))?$_data['_oUser']->user_id:$this->session->userdata('user_id');
+		$pluginsext_q = $this->pluginsext_model->get_params_user_by_id($_data['pluginsext_id'], $_userid);
 
-
+		// Verif if user is allow //
+		if (isset($pluginsext_q->row()->pluginsext_user_allow)) {
+			$_data['pluginsext_row']->pluginsext_user_allow = $pluginsext_q->row()->pluginsext_user_allow;
+			$_data['pluginsext_row']->pluginsext_params = json_decode($pluginsext_q->row()->pluginsext_params);
+            $_data['pluginsext_row']->pluginsext_values = json_decode($pluginsext_q->row()->pluginsext_values);
+			$_data['pluginsext_row']->pluginsext_info = json_decode($_data['pluginsext_row']->pluginsext_info);
+            $_data['pluginsext_row']->pluginsext_config = json_decode($_data['pluginsext_row']->pluginsext_config);
+		} else {
+			$_data['pluginsext_row']->pluginsext_user_allow = 0;
+			$_data['pluginsext_row']->pluginsext_params = json_decode('{}');
+            //$_data['pluginsext_row']->pluginsext_values = json_decode('{}');
+			$_data['_msg_error'] = array('s'=>'ne', 't'=>$_msg_notexist);
+		}
+        if ($_data['pluginsext_row']->pluginsext_user_allow != 1) { $_data['_msg_error'] = array('s'=>'na', 't'=>$_msg_notactiv); }
+		return $_data;
+    }
 
 }

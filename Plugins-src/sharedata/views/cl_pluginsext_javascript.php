@@ -1,6 +1,6 @@
 var sharedata_icon = "<div class='sharedata_onair' data-info='0' style='display:none;cursor:pointer;color:#FFFFFF;padding:2px 6px;'><i class='fas fa-rss'></i></div>";
 var sharedata_base_url= "<?php echo base_url();?>";
-var sharedata_user_id = "<?php echo $this->session->userdata('user_id'); ?>";
+var sharedata_user_id = "<?php echo $this->session->userdata('user_name'); ?>";
     
 $('.cl_pluginsext_info .pluginsext_infozone_sharedata').append(sharedata_icon);
 $('.cl_pluginsext_info .pluginsext_infozone_sharedata').show();
@@ -9,7 +9,7 @@ $('.sharedata_onair').off('click').on('click',function() { sharedata_set_onair($
 //
 function sharedata_set_onair(_this) {
     $.ajax({
-            url: sharedata_base_url+'index.php/pluginsext/ex/'+sharedata_user_id+'/sharedata/set_onair',
+            url: sharedata_base_url+'index.php/pluginsext/ws/sharedata/ws_setonair',
             type: 'POST', dataType: 'json',
             data: { onair_state:((_this.attr('data-info')==0)?1:0) },
             error: function() { console.log('ERROR: ajax set_onair() function return error.'); },
@@ -21,7 +21,6 @@ function sharedata_set_onair(_this) {
                     _this.removeClass('alert-warning');
                     _this.attr('data-info','0');
                 }
-                console.log(res.onair_icon);
                 $('.sharedata_onair i').removeAttr('class').addClass('fas').addClass(res.onair_icon);
                 $('.sharedata_onair').show();
             }
@@ -30,7 +29,7 @@ function sharedata_set_onair(_this) {
 
 function sharedata_get_onair() {
     $.ajax({
-            url: sharedata_base_url+'index.php/pluginsext/ex/'+sharedata_user_id+'/sharedata/get_onair',
+            url: sharedata_base_url+'index.php/pluginsext/ws/sharedata/ws_onair',
             type: 'POST', dataType: 'json',
             error: function() { console.log('ERROR: ajax get_onair() function return error.'); },
             success: function(res) {
