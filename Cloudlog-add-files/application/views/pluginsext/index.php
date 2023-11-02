@@ -28,7 +28,7 @@
                         <td style="width:40%;"><?php echo $row->pluginsext_name;?></td>
                          <td style="width:20%;"><?php echo $row->pluginsext_nameid;?></td>
                         <td class='mode_<?php echo $row->pluginsext_id ?>'>
-                            <?php if ($row->pluginsext_user_allow == 1) { echo $this->lang->line('general_word_yes'); } else { echo $this->lang->line('general_word_no');} ?>
+                            <?php if ($row->pluginsext_user_allow == 1) { echo $this->lang->line('general_word_yes'); } else { echo $this->lang->line('general_word_no'); } ?>
                         </td>
                         <td style="text-align:right;">
                             <? if ($row->pluginsext_allow == 1) { ?> <a href="<?php echo site_url('pluginsext/edit')."/".$row->pluginsext_id; ?>" class="btn btn-outline-primary btn-sm"><i class="fas fa-edit"></i> Edit</a> <?php } ?>

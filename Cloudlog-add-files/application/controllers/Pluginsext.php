@@ -2,12 +2,13 @@
 
 class Pluginsext extends CI_Controller {
 
-    // load construct //
+    // load construct // ['.get_called_class().']
 	function __construct() {
         parent::__construct();
         $this->lang->load('pluginsext');
         $this->load->model('pluginsext_model');
         $this->load->model('user_model');
+        log_message('debug','[Pluginsext] Load class');
     }
             
     // default methode : list plugins //
@@ -15,6 +16,7 @@ class Pluginsext extends CI_Controller {
         if($this->user_model->validate_session() == 0) { redirect('user/login'); }
         // check new plugin exist in folder //
         $this->check_new_update_pluginsext(true);
+        log_message('debug','[Pluginsext] Load class');
         // set data //
         $list_pluginsext = $this->pluginsext_model->list_all();
         $list_pluginsext_for_user = $this->pluginsext_model->list_for_user($this->session->userdata('user_id'));
@@ -38,6 +40,7 @@ class Pluginsext extends CI_Controller {
         if ($this->form_validation->run() !== FALSE) {
             $this->pluginsext_model->save_params_user($_post, $this->session->userdata('user_id'));
             $this->session->set_flashdata('success', $_post['pluginsext_name'].' ('.$_post['pluginsext_id'].'): this external plugin was updated.');
+            log_message('debug','[Pluginsext]['.$_post['pluginsext_name'].'] edit(): this external plugin was updated.');
             redirect('pluginsext');
         }
 
@@ -47,9 +50,13 @@ class Pluginsext extends CI_Controller {
         $data = $this->cheack_is_allow($data);
         if ($data['_msg_error']['s'] == 'ne') { 
             $this->session->set_flashdata('message', $data['_msg_error']['t']);
+            log_message('debug','[Pluginsext]['.$data["pluginsext_row"]->pluginsext_nameid.'] edit(): ne/'.$data['_msg_error']['t']);
             redirect('pluginsext');
         }
-        if ($data['_msg_error']['s'] == 'na') { $this->session->set_flashdata('message', $data['_msg_error']['t']); }
+        if ($data['_msg_error']['s'] == 'na') { 
+            log_message('debug','[Pluginsext]['.$data["pluginsext_row"]->pluginsext_nameid.'] edit(): na/'.$data['_msg_error']['t']);
+            $this->session->set_flashdata('message', $data['_msg_error']['t']); 
+        }
 
         // Set data //
         $data['page_title'] = $this->lang->line('pluginsext_title_page');
@@ -61,6 +68,7 @@ class Pluginsext extends CI_Controller {
         $this->load_pluginext_class($data['pluginsext_row']->pluginsext_nameid);
         $_pe_class = ucfirst($data['pluginsext_row']->pluginsext_nameid);
         if (method_exists($this->$_pe_class, 'cl_pluginsext_edit')) {
+            log_message('debug','[Pluginsext]['.$data["pluginsext_row"]->pluginsext_nameid.'] Load cl_pluginsext_edit with data='.print_r($data,true));
             $data = $this->$_pe_class->cl_pluginsext_edit($data);
         }
         // load view //
@@ -85,6 +93,7 @@ class Pluginsext extends CI_Controller {
         $data = $this->cheack_is_allow($data);
         if ($data['_msg_error']['s'] == 'ne') { 
             $this->session->set_flashdata('message', $data['_msg_error']['t']);
+            log_message('debug','[Pluginsext]['.$data['pluginsext_nameid'].'] menu(): Load cl_pluginsext_edit');
             redirect('pluginsext');
         }
         if ($data['_msg_error']['s'] != 'ok') {
@@ -120,6 +129,7 @@ class Pluginsext extends CI_Controller {
     public function ws() {
         if($this->user_model->validate_session() == 0) { 
             header('Content-Type: application/json');
+            log_message('warning','[Pluginsext][WS]['.$this->uri->segment(3).']['.$this->uri->segment(4).'] ERROR: User not authentified !');
             echo json_encode(array('pe_stat'=>'KO','pe_msg'=>'ERROR: User not authentified !'));
             return false;
         }
@@ -127,6 +137,8 @@ class Pluginsext extends CI_Controller {
         $data['pluginsext_nameid'] = $this->uri->segment(3);
         $data['methode_name'] = $this->uri->segment(4);
         $data['methode_args'] = array('arg1'=>$this->uri->segment(5), 'arg2'=>$this->uri->segment(6), 'arg3'=>$this->uri->segment(7));
+        log_message('debug','[Pluginsext][WS]['.$data['pluginsext_nameid'].']['.$data['methode_name'].'] ws request with args='.print_r($data['methode_args'],true));
+
         // verif if plugin can used & get info plugin for user //
         $data = $this->cheack_is_allow($data);
         if (($data['_msg_error']['s'] == 'ok') && (!empty($data['methode_name']))) {
@@ -160,6 +172,7 @@ class Pluginsext extends CI_Controller {
         $data['pluginsext_nameid'] = $this->uri->segment(4);
         $data['methode_name'] = $this->uri->segment(5);
         $data['methode_args'] = array('arg1'=>$this->uri->segment(6), 'arg2'=>$this->uri->segment(7), 'arg3'=>$this->uri->segment(8));
+        log_message('debug','[Pluginsext][EX]['.$data['pluginsext_nameid'].']['.$data['methode_name'].'] external request with args='.print_r($data['methode_args'],true));
 
         // verif username exist //
         $data['_oUser'] = $this->user_model->get($data['_username'])->row();
@@ -238,8 +251,9 @@ class Pluginsext extends CI_Controller {
                     if (!ctype_alnum($list_folder_pluginsext[$i])) { unset($list_folder_pluginsext[$i]); }
                 }
                 sort($list_folder_pluginsext);
-            }
-        }
+            } else log_message('error','[Pluginsext] pluginsext_path ('.APPPATH.$this->config->item('pluginsext_path').') not a directory.');
+        } else log_message('error','[Pluginsext] pluginsext_path not configured in config.php file.');
+        log_message('error','[Pluginsext] Folder found : '.count($list_folder_pluginsext).', in '.APPPATH.$this->config->item('pluginsext_path'));
         return $list_folder_pluginsext;
     }
     
@@ -250,6 +264,7 @@ class Pluginsext extends CI_Controller {
         $this->$_cn =& load_class($_cn, $this->config->item('pluginsext_path').'/'.$_class.'/controllers');
         // load specifiqe lang //
         $this->lang->load($_class,'',FALSE,TRUE, APPPATH.$this->config->item('pluginsext_path').'/'.$_class.'/');
+        log_message('error','[Pluginsext] Class "'.$_cn.'" loaded.');
         return $this;
     }
 
@@ -261,42 +276,53 @@ class Pluginsext extends CI_Controller {
         // verif is plugin exist //
         if (isset($_data['pluginsext_nameid']) && (!empty($_data['pluginsext_nameid']))) {
             $pluginsext_q = $this->pluginsext_model->get_by_nameid($_data['pluginsext_nameid']);
+            log_message('debug','[Pluginsext] cheack_is_allow().pluginsext_nameid='.$_data['pluginsext_nameid']);
         } else if (isset($_data['pluginsext_id']) && ($_data['pluginsext_id']>0)) {
             $pluginsext_q = $this->pluginsext_model->get_by_id($_data['pluginsext_id']);
+            log_message('debug','[Pluginsext] cheack_is_allow().pluginsext_id='.$_data['pluginsext_id']);
         } else {
             $_data['_msg_error'] = array('s'=>'ne', 't'=>$_msg_notexist.' (id error)');
+            log_message('debug','[Pluginsext] cheack_is_allow().msg=ne/'.$_msg_notexist.' (id error)');
             return $_data;            
         } 
         // get info et verif is plugin exist //
         $_data['pluginsext_row'] = $pluginsext_q->row();
 		if ((!is_object($_data['pluginsext_row'])) || (!isset($_data['pluginsext_row']->pluginsext_nameid))) {
 			$_data['_msg_error'] = array('s'=>'ne', 't'=>$_msg_notexist.' (not object)');
+            log_message('debug','[Pluginsext] cheack_is_allow().msg=ne/'.$_msg_notexist.' (not object)');
 			return $_data;
 		}
         $_data['pluginsext_id'] = $_data['pluginsext_row']->pluginsext_id;
         // verif plugin allow on cloudlog //
+        log_message('debug','[Pluginsext] cheack_is_allow()._data["pluginsext_row"]->pluginsext_allow='.$_data['pluginsext_row']->pluginsext_allow);
         if ($_data['pluginsext_row']->pluginsext_allow != 1) {
 			$_data['pluginsext_row']->pluginsext_user_allow = 0;
 			$_data['pluginsext_row']->pluginsext_params = json_decode('{}');
-            //$_data['pluginsext_row']->pluginsext_values = json_decode('{}');
+            $_data['pluginsext_row']->pluginsext_info = json_decode($_data['pluginsext_row']->pluginsext_info);
+            $_data['pluginsext_row']->pluginsext_config = json_decode($_data['pluginsext_row']->pluginsext_config);
 			$_data['_msg_error'] = array('s'=>'ne', 't'=>$_msg_notexist.' (not allowed)');
+            log_message('debug','[Pluginsext] cheack_is_allow().msg=ne/'.$_msg_notexist.' (not allowed)');
 			return $_data;
         }
         // if allow, get param of this plugin for current user //
 		$_userid = ((isset($_data['_oUser']))&&($_data['_oUser']->user_id>0))?$_data['_oUser']->user_id:$this->session->userdata('user_id');
+        log_message('debug','[Pluginsext] cheack_is_allow()._userid='.$_userid);
 		$pluginsext_q = $this->pluginsext_model->get_params_user_by_id($_data['pluginsext_id'], $_userid);
 
 		// Verif if user is allow //
 		if (isset($pluginsext_q->row()->pluginsext_user_allow)) {
+            log_message('debug','[Pluginsext] cheack_is_allow().pluginsext_user_allow is exit ('.$pluginsext_q->row()->pluginsext_user_allow.')');
 			$_data['pluginsext_row']->pluginsext_user_allow = $pluginsext_q->row()->pluginsext_user_allow;
 			$_data['pluginsext_row']->pluginsext_params = json_decode($pluginsext_q->row()->pluginsext_params);
             $_data['pluginsext_row']->pluginsext_values = json_decode($pluginsext_q->row()->pluginsext_values);
 			$_data['pluginsext_row']->pluginsext_info = json_decode($_data['pluginsext_row']->pluginsext_info);
             $_data['pluginsext_row']->pluginsext_config = json_decode($_data['pluginsext_row']->pluginsext_config);
 		} else {
+            log_message('debug','[Pluginsext] cheack_is_allow().pluginsext_user_allow NOT exit /!\\');
 			$_data['pluginsext_row']->pluginsext_user_allow = 0;
 			$_data['pluginsext_row']->pluginsext_params = json_decode('{}');
-            //$_data['pluginsext_row']->pluginsext_values = json_decode('{}');
+            $_data['pluginsext_row']->pluginsext_info = json_decode($_data['pluginsext_row']->pluginsext_info);
+            $_data['pluginsext_row']->pluginsext_config = json_decode($_data['pluginsext_row']->pluginsext_config);
 			$_data['_msg_error'] = array('s'=>'ne', 't'=>$_msg_notexist);
 		}
         if ($_data['pluginsext_row']->pluginsext_user_allow != 1) { $_data['_msg_error'] = array('s'=>'na', 't'=>$_msg_notactiv); }

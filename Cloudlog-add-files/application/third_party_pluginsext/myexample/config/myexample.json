@@ -1,5 +1,6 @@
 {
-    "name":"examplemod",
+    "nameid":"myexample",
+    "name":"My Example",
     "author":"myname",
     "source":"https://github.com/",
     "version":"1.0",
@@ -7,7 +8,6 @@
     "description":"This external plugins is an example template for developper",
     "config":{ 
         "is_public_plugins":0, 
-        "href_main_menu":0,
         "js_include":0,
         "top_main_add_menu":0,
         "top_main_add_infozone":0
