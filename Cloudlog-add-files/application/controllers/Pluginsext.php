@@ -245,7 +245,7 @@ class Pluginsext extends CI_Controller {
         $list_folder_pluginsext = array();
         if (APPPATH != APPPATH.$this->config->item('pluginsext_path')) {
             if (is_dir(APPPATH.$this->config->item('pluginsext_path'))) {
-                $list_folder_pluginsext = array_diff(scandir(APPPATH.$this->config->item('pluginsext_path')), array('..', '.','.DS_Store'));
+                $list_folder_pluginsext = array_diff(scandir(APPPATH.$this->config->item('pluginsext_path')), array('..', '.','.DS_Store','@eaDir'));
                 sort($list_folder_pluginsext);
                 for ($i=0; $i<count($list_folder_pluginsext); $i++) { 
                     if (!ctype_alnum($list_folder_pluginsext[$i])) { unset($list_folder_pluginsext[$i]); }
@@ -327,6 +327,79 @@ class Pluginsext extends CI_Controller {
 		}
         if ($_data['pluginsext_row']->pluginsext_user_allow != 1) { $_data['_msg_error'] = array('s'=>'na', 't'=>$_msg_notactiv); }
 		return $_data;
+    }
+
+    // Check installation //
+    public function check_install() {
+        $_files = array(
+            'controllers/Pluginsext.php',
+            'controllers/Pluginsext_extands.php',
+            'language/english/pluginsext_lang.php',
+            'language/french/pluginsext_lang.php',
+            'models/Pluginsext_model.php',
+            'views/pluginsext/footer.php',
+            'views/pluginsext/edit.php',
+            'views/pluginsext/index.php',
+            'views/pluginsext/menu.php'
+        );
+        $_config = array('pluginsext_allow','pluginsext_path');
+        $_tablebdd = array('pluginsext','pluginsext_plugindata','pluginsext_users');
+
+        if($this->user_model->validate_session() == 0) { redirect('user/login'); }
+        echo "<b>[PLUGINEXT] CHECK INSTALL</b><br/>";
+        
+        echo "<br/><u>*** Verif files :</u><br/>";
+        foreach($_files as $f) { echo "<span style=\"padding-left:15px;\">-- ".APPPATH.$f." : ".((file_exists(APPPATH.$f))?"<span style='color:#3BBB3B;'>OK</span>":"<span style='font-weight:bold;color:#EE0000;'>NOT EXIST</span>, get if from github."); echo "</span><br/>"; }
+
+        echo "<br/><u>*** Verif external folder config :</u><br/>";
+        $_folderconfig=false;
+        foreach($_config as $c) {
+            echo "<span style=\"padding-left:15px;\">-- config item \"".$c."\" : ";
+            $_tmp = $this->config->item($c);
+            if (isset($_tmp)) { echo "<span style='color:#3BBB3B;'>OK</span> (".(($_tmp===false)?"false":$_tmp).")"; if($c=="pluginsext_path") { $_folderconfig=true; } } 
+                else { echo "<span style='font-weight:bold;color:#EE0000;'>NOT EXIST</span>, check doc for create it !"; }
+            echo "</span><br/>";
+        }
+
+        if($_folderconfig) {
+            echo "<br/><u>*** Verif external folder exist :</u><br/>";
+            echo "<span style=\"padding-left:15px;\">-- folder \"".APPPATH.$this->config->item('pluginsext_path')."\" : </span>";
+            if (is_dir(APPPATH.$this->config->item('pluginsext_path'))) { 
+                echo "<span style='color:#3BBB3B;'>OK</span> <br/>"; 
+                $_list_folder_pluginsext = array_diff(scandir(APPPATH.$this->config->item('pluginsext_path')), array('..', '.','.DS_Store','@eaDir'));
+                sort($_list_folder_pluginsext);
+                echo "<span style=\"padding-left:15px;\">-- content folder : </span>";
+                if (count($_list_folder_pluginsext)>0) {
+                    foreach($_list_folder_pluginsext as $f) { echo "<br/><span style=\"padding-left:45px;\">* /".$f; }
+                } else { echo "<b>is empty !</b>"; }
+            } else { echo "<span style='font-weight:bold;color:#EE0000;'>NOT EXIST</span>, check doc for create folder ! </span>"; }
+            echo "<br/>";
+        }
+
+        echo "<br/><u>*** Verif database :</u>";
+        $_tmplist = $this->db->list_tables();
+        foreach($_tablebdd as $t) {
+            echo "<br/><span style=\"padding-left:15px;\">-- table \"".$t."\" : ";
+            if (in_array($t, $_tmplist)) { 
+                echo "<span style='color:#3BBB3B;'>OK</span>";
+                foreach($this->db->list_fields($t) as $f) { echo "<br/><span style=\"padding-left:45px;\">* ".$f; }
+            } else { echo "<span style='font-weight:bold;color:#EE0000;'>NOT EXIST</span>, check doc for create it !"; }
+            echo "</span>";
+        }
+        echo "<br/>";
+
+        $_footer = APPPATH."views/interface_assets/footer.php";
+        echo "<br/><u>*** Verif change on file : \"".$_footer."\" :</u><br/>";
+        $_add = "<?php require_once(APPPATH.'/views/pluginsext/footer.php'); ?>";
+        $_footercontent = file_get_contents($_footer);
+        echo "<span style=\"padding-left:15px;\">-- content search \"".htmlspecialchars($_add)."\" : ";
+        if(($_pos=strpos($_footercontent, $_add)) !== false) { 
+            echo "<span style='color:#3BBB3B;'>OK</span> (".$_pos.")<br/>";
+            echo "<div style='margin-left:45px;padding:3px;font-style:italic;background-color:#DDDDDD;width:70%;font-size:85%;'>...".nl2br(htmlspecialchars(substr($_footercontent,($_pos-5))))."</div>";
+        } else { echo "<span style='font-weight:bold;color:#EE0000;'>NOT EXIST</span>, check doc for add it in file just BEFORE : ".htmlspecialchars("</body></html>")." !"; }
+        echo "<br/>";
+
+        echo "<br/><b>[PLUGINEXT] CHECK INSTALL FINISH (".date('Y-m-d H:i').")</b><br/>";
     }
 
 }
