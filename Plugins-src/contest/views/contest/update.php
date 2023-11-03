@@ -76,13 +76,13 @@
                             <?php 
                                 if (!isset($pluginsdata_data->contest_bands)) { $pluginsdata_data->contest_bands = ""; }
                                 $_aContest_bands = explode(",", $pluginsdata_data->contest_bands);
-                                $pluginsdata_data->contest_bands = ($pluginsdata_data->contest_bands=="")?$this->lang->line('contest_bandsselect'):$pluginsdata_data->contest_bands; 
+                                $pluginsdata_data->contest_bands = ($pluginsdata_data->contest_bands=="")?$this->lang->line('contest_select_value'):$pluginsdata_data->contest_bands; 
                             ?>
-                            <div class="contest_selectBox">
+                            <div class="contest_selectBox" data-boxcontent="contest_bands">
                                 <select class="custom-select" name="pluginsdata_data__contest_bands"><option><?php echo $pluginsdata_data->contest_bands; ?></option></select>
                                 <div class="contest_overSelect"></div>
                             </div>
-                            <div id="contest_checkboxes" class="col-sm-11 dropdown-menu bg-light">
+                            <div class="col-sm-11 dropdown-menu bg-light contest_selectBox_data" data-boxcontent="contest_bands"> <!--id="contest_bands_checkboxes" -->
                                 <?php foreach($list_cl_band as $_k=>$_bandgp) {
                                     echo "<label for=\"".strtoupper($_k)."\">".strtoupper($_k)."</label>";
                                     foreach($_bandgp as $_band) { echo "<label for=\"".$_band."\"><input type=\"checkbox\" value=\"".$_band."\" ".((in_array($_band,$_aContest_bands))?"checked":"")." /> ".$_band."</label> "; }
@@ -117,6 +117,53 @@
     </div>
     <br/>
 
+    <div class="row">
+       <div class="col-md">
+            <div class="card">
+                <div class="card-header"><?php echo $this->lang->line('contest_conf_score_tab'); ?></div>
+                <div class="card-body">
+                   <div class="form-row">
+                        <div class="form-group col-sm-4">
+                            <label for="pluginsdata_data__contest_score_conf_col"><?php echo $this->lang->line('contest_score_tab_col'); ?></label>
+                            <?php 
+                                if (!isset($pluginsdata_data->contest_score_conf_col)) { $pluginsdata_data->contest_score_conf_col = ""; }
+                                $_aContest_score_conf_col = explode(",", $pluginsdata_data->contest_score_conf_col);
+                                $pluginsdata_data->contest_score_conf_col = ($pluginsdata_data->contest_score_conf_col=="")?$this->lang->line('contest_select_value'):$pluginsdata_data->contest_score_conf_col; 
+                            ?>
+                            <div class="contest_selectBox" data-boxcontent="contest_score_conf_col">
+                                <select class="custom-select" name="pluginsdata_data__contest_score_conf_col"><option><?php echo $pluginsdata_data->contest_score_conf_col; ?></option></select>
+                                <div class="contest_overSelect"></div>
+                            </div>
+                            <div class="dropdown-menu bg-light contest_selectBox_data" style="width:110%;" data-boxcontent="contest_score_conf_col">
+                                <?php foreach($list_score_tab_col as $_kcol => $_vcol) { 
+                                    echo "<label for=\"".$_kcol."\">
+                                            <input type=\"checkbox\" value=\"".$_kcol."\" ".((in_array($_kcol,$_aContest_score_conf_col)||($_vcol['c']===true))?"checked":"")." ".(($_vcol['c']===true)?"disabled":"")." /> 
+                                            ".$_kcol." | ".$_vcol['nf']." ".(($_vcol['t']=='i')?"(".$this->lang->line('contest_info').")":"")."</label> "; 
+                                } ?>
+                            </div>
+                        </div>
+                        <div class="form-group col-sm-4">
+                            <label for="pluginsdata_data__contest_score_conf_row"><?php echo $this->lang->line('contest_score_tab_row'); ?></label>
+                            <?php if (!isset($pluginsdata_data->contest_score_conf_row)) { $pluginsdata_data->contest_score_conf_row = ''; } ?>
+                            <select class="custom-select" id="pluginsdata_data__contest_score_conf_row" name="pluginsdata_data__contest_score_conf_row">
+                                <?php foreach($list_score_tab_row as $_krow => $_vrow) { echo "<option value=\"".$_krow."\" ".(($pluginsdata_data->contest_score_conf_row == $_krow)?"selected =\"selected\"":"")." >".$_vrow['nf']."</option>"; } ?>
+                            </select>
+                        </div>
+                        <div class="form-group col-sm-4">
+                            <label for="pluginsdata_data__contest_score_calcul_point_method"><?php echo $this->lang->line('contest_score_calcul_point_method'); ?></label>
+                            <?php if (!isset($pluginsdata_data->contest_score_calcul_point_method)) { $pluginsdata_data->contest_score_calcul_point_method = ''; } ?>
+                            <select class="custom-select" id="pluginsdata_data__contest_score_calcul_point_method" name="pluginsdata_data__contest_score_calcul_point_method">
+                                <option value="none" <?php echo (($pluginsdata_data->contest_score_calcul_point_method == "none")?"selected =\"selected\"":""); ?> >-</option>
+                                <?php foreach($list_score_calcul_point_method as $_krow => $_vrow) { echo "<option value=\"".$_krow."\" ".(($pluginsdata_data->contest_score_calcul_point_method == $_krow)?"selected =\"selected\"":"")." >".$_vrow['nf']."</option>"; } ?>
+                            </select>
+                        </div>                           
+    	            </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br/>
+    
     <div class="row">
        <div class="col-md">
             <div class="card">
@@ -365,10 +412,11 @@
         </div>
     </div>
     <br/>
+    
     <div class="row">
        <div class="col-md">
             <div class="card">
-                <div class="card-header"><?php echo $this->lang->line('contest_conf_score'); ?> <a class="btn btn-primary btn-sm pe_contest_btn_category_add float-right" title="<?php echo $this->lang->line('contest_score_category_add'); ?>" style="margin-left:10px;"><i class="fas fa-plus"></i>&nbsp; <?php echo $this->lang->line('contest_score_category_add'); ?></a></div>
+                <div class="card-header"><?php echo $this->lang->line('contest_conf_offical_result'); ?> <a class="btn btn-primary btn-sm pe_contest_btn_category_add float-right" title="<?php echo $this->lang->line('contest_score_category_add'); ?>" style="margin-left:10px;"><i class="fas fa-plus"></i>&nbsp; <?php echo $this->lang->line('contest_score_category_add'); ?></a></div>
                 <div class="card-body">
                     <div class="form-row">
                         <div class="form-group col-sm-10">
@@ -394,7 +442,7 @@
                             <input type="text" class="form-control" id="pluginsdata_data__contest_score_nbparticipanty_1" name="pluginsdata_data__contest_score_nbparticipant_1" value="<?php echo $pluginsdata_data->contest_score_nbparticipant_1; ?>" />
                         </div> 
                         <div class="form-group col-sm-2">
-                            <label for="pluginsdata_data__contest_score_finalscore"><?php echo $this->lang->line('contest_score_finalscore'); ?></label>
+                            <label for="pluginsdata_data__contest_score_finalscore"><?php echo $this->lang->line('contest_conf_offical_result'); ?></label>
                             <?php if (!isset($pluginsdata_data->contest_score_finalscore_1)) { $pluginsdata_data->contest_score_finalscore_1 = ''; } ?>
                             <input type="text" class="form-control" id="pluginsdata_data__contest_score_finalscore_1" name="pluginsdata_data__contest_score_finalscore_1" value="<?php echo $pluginsdata_data->contest_score_finalscore_1; ?>" />
                         </div> 
@@ -416,6 +464,7 @@
         </div>
     </div>
     <br/>
+    
     <div class="row">
        <div class="col-md">
             <div class="card">
@@ -423,36 +472,11 @@
                 <div class="card-body">
                     <div class="form-row">
                         <div class="form-group col-sm-3">
-                            <label for="pluginsext_params__name_autoupdate"><?php echo $this->lang->line('contest_other_name_autoupdate'); ?></label>
-                            <!--<?php if (!isset($pluginsext_row->pluginsext_params->name_autoupdate)) { $pluginsext_row->pluginsext_params->name_autoupdate = 0; } ?>
-                            <select class="custom-select" id="pluginsext_params__name_autoupdate" name="pluginsext_params__name_autoupdate">
-                                <option value="0" <?php if ($pluginsext_row->pluginsext_params->name_autoupdate == 0) { echo " selected =\"selected\""; } ?>><?php echo $this->lang->line('general_word_no'); ?></option>
-                                <option value="1" <?php if ($pluginsext_row->pluginsext_params->name_autoupdate == 1) { echo " selected =\"selected\""; } ?>><?php echo $this->lang->line('general_word_yes'); ?></option>
-                            </select>
-                        </div>
-                        <div class="form-group col-sm-1">&nbsp;</div>
-                        <div class="form-group col-sm-3">
-                            <label for="pluginsext_params__name_autoupdate"><?php echo $this->lang->line('contest_other_autoupdate_now'); ?></label>-->
-                            <a class="btn btn-info pe_contest_btn_updateall_name" style="cursor:pointer;"><i class="fas fa-tasks"></i> <?php echo $this->lang->line('pluginsext_update'); ?></a>
+                            <label for="pluginsext_params__calcul_pts"><?php echo $this->lang->line('contest_other_update_pts'); ?></label><br/>
+                            <a class="btn btn-info pe_contest_btn_calcul_pts" style="cursor:pointer;"><i class="fas fa-tasks"></i> <?php echo $this->lang->line('pluginsext_update'); ?></a>
                         </div>
                         <div class="form-group col-sm-3"><label>&nbsp;</label><br/><span class="contest_listinfo_nbv" style="display:none;"></span></div>
                     </div>
-                    <!--<div class="form-row">
-                        <div class="form-group col-sm-3">
-                            <label for="pluginsext_params__distance_autoupdate"><?php echo $this->lang->line('contest_other_distance_autoupdate'); ?></label>
-                            <?php if (!isset($pluginsext_row->pluginsext_params->distance_autoupdate)) { $pluginsext_row->pluginsext_params->distance_autoupdate = 0; } ?>
-                            <select class="custom-select" id="pluginsext_params__distance_autoupdate" name="pluginsext_params__distance_autoupdate">
-                                <option value="0" <?php if ($pluginsext_row->pluginsext_params->distance_autoupdate == 0) { echo " selected =\"selected\""; } ?>><?php echo $this->lang->line('general_word_no'); ?></option>
-                                <option value="1" <?php if ($pluginsext_row->pluginsext_params->distance_autoupdate == 1) { echo " selected =\"selected\""; } ?>><?php echo $this->lang->line('general_word_yes'); ?></option>
-                            </select>
-                        </div>
-                        <div class="form-group col-sm-1">&nbsp;</div>
-                        <div class="form-group col-sm-3">
-                            <label for="pluginsext_params__name_autoupdate"><?php echo $this->lang->line('contest_other_autoupdate_now'); ?></label>
-                            <a class="btn btn-info pe_contest_btn_updateall_distance" style="cursor:pointer;"><i class="fas fa-tasks"></i> <?php echo $this->lang->line('pluginsext_update'); ?></a>
-                        </div>
-                        <div class="form-group col-sm-3"><label>&nbsp;</label><br/><span class="contest_listinfo_distance" style="display:none;"></span></div>
-                    </div>-->
                 </div>
             </div>
         </div>
@@ -467,7 +491,7 @@
 <style>
 .contest_selectBox { position: relative; }
 .contest_overSelect { position: absolute; left:0;right:0; top:0; bottom:0; }
-#contest_checkboxes { display: none; position:absolute; z-index:50; left:initial; padding:5px 15px; }
-#contest_checkboxes label { display: block; margin-bottom:0px!important; }
-#contest_checkboxes input { margin-right:5px; }
+.contest_selectBox_data { display: none; position:absolute; z-index:50; left:initial; padding:5px 15px; }
+.contest_selectBox_data label { display: block; margin-bottom:0px!important; }
+.contest_selectBox_data input { margin-right:5px; }
 </style>

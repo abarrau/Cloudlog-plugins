@@ -1,11 +1,20 @@
     <div class="card-body" style="padding-bottom:5px">
         <div class="form-row">
-            <div class="form-group col-sm-4">
+            <!--<div class="form-group col-sm-4">
                 <label for="pluginsext_params__bddcoluserdef_namecontest"><?php echo $this->lang->line('contest_bddcoluserdef_namecontest'); ?></label>
                 <?php if (!isset($pluginsext_row->pluginsext_params->bddcoluserdef_namecontest)) { $pluginsext_row->pluginsext_params->bddcoluserdef_namecontest = 'COL_USER_DEFINED_0'; } ?>
                 <select class="custom-select" id="pluginsext_params__bdd_coluserdef_namecontest" name="pluginsext_params__bddcoluserdef_namecontest">
                     <?php for ($i=0;$i<10;$i++) { 
                         echo '<option value="COL_USER_DEFINED_'.$i.'" '.(($pluginsext_row->pluginsext_params->bddcoluserdef_namecontest=='COL_USER_DEFINED_'.$i)?'selected="selected"':'').'>COL_USER_DEFINED_'.$i.'</option>';
+                    } ?>
+                </select>
+            </div>-->  
+            <div class="form-group col-sm-4">
+                <label for="pluginsext_params__bddcoluserdef_pts"><?php echo $this->lang->line('contest_bddcoluserdef_pts'); ?></label>
+                <?php if (!isset($pluginsext_row->pluginsext_params->bddcoluserdef_pts)) { $pluginsext_row->pluginsext_params->bddcoluserdef_pts = 'COL_USER_DEFINED_0'; } ?>
+                <select class="custom-select" id="pluginsext_params__bdd_coluserdef_pts" name="pluginsext_params__bddcoluserdef_pts">
+                    <?php for ($i=0;$i<10;$i++) { 
+                        echo '<option value="COL_USER_DEFINED_'.$i.'" '.(($pluginsext_row->pluginsext_params->bddcoluserdef_pts=='COL_USER_DEFINED_'.$i)?'selected="selected"':'').'>COL_USER_DEFINED_'.$i.'</option>';
                     } ?>
                 </select>
             </div>  

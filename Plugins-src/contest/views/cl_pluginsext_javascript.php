@@ -1,7 +1,7 @@
 // === FOR ALL PAGE ==========
 // add event on ahref for qso popup detail //
 $('a[href*=displayQso]').click(function(e) {
-    setTimeout(pluginsext_addcontexte2qso,1000);
+    //setTimeout(pluginsext_addcontexte2qso,1000); // standby for the moment /
 });
 // add info of contest on qso popup //
 function pluginsext_addcontexte2qso() {
@@ -12,15 +12,45 @@ function pluginsext_addcontexte2qso() {
 <?php if ($this->uri->segment(1) == "pluginsext" && $this->uri->segment(3) == "contest") { ?>
 
 var pluginext_location = window.location.pathname;
-var pluginext_contest_bandsselect = "<?php echo $this->lang->line('contest_bandsselect'); ?>";
+var pluginext_contest_select_value = "<?php echo $this->lang->line('contest_select_value'); ?>";
 var pluginext_contest_base_url = "<?php echo base_url(); ?>";
 var pluginext_contest_stateqso = <?php echo isset($pluginsext_contest_icon_stateqso)?json_encode($pluginsext_contest_icon_stateqso):"{}"; ?>;
 var pluginext_contest_log_type = "<?php echo (isset($pluginsdata_data->contest_log_type))?$pluginsdata_data->contest_log_type:""; ?>";
 var pluginext_contest_url_cabrillo = pluginext_contest_base_url+'index.php/cabrillo';
 
 // === FUNCTIONS ==========
-// change state of contest qso //
-function contest_setqsostate(_this,_all) {
+// calcul pts of all qso //
+function contest_setqsopts(_this) {
+	pluginsext_alert('hide','');
+	if (parseInt($('input[name=pluginsdata_id]').attr('value'))>0) {
+		var _txt = "<?php echo str_replace("'","\'",$this->lang->line('contest_other_update_pts_alert')); ?>";
+		if (confirm(pluginsext_br2n(_txt)) !== true) { return; } 
+	    $.ajax({
+	            url: pluginext_contest_base_url+'index.php/pluginsext/ws/contest/ws_setqsopts/'+$('input[name=pluginsdata_id]').attr('value'),
+	            type: 'POST', dataType: 'json',
+	            data: { },
+	            error: function() { console.log('ERROR: ajax contest_setqsopts() function return error.'); },
+	            success: function(res) {
+					console.log(res);
+		            if (res.pe_stat!="OK") {
+		            	var _msg = "ERROR found";
+		            	if (typeof res.pe_msg != "undefined") { _msg = res.pe_msg; }
+						pluginsext_alert('danger',_msg);
+						return false;
+		            }
+	            	var _txt = "QSO <?php echo str_replace("'","\'",$this->lang->line('pluginsext_updated')); ?>";
+	            	_txt = _txt + " : " + res.qso_updated;
+	            	$('.contest_listinfo_nbv').show();
+		            $('.contest_listinfo_nbv').html(_txt);
+	            }
+	    });
+	} else {
+		var _txt = "<?php echo str_replace("'","\'",$this->lang->line('contest_save_first_before_action')); ?>";
+		pluginsext_alert('danger',_txt);
+	}
+}
+//
+/* function contest_setqsostate(_this,_all) {
 	pluginsext_alert('hide','');
 	if (parseInt($('input[name=pluginsdata_id]').attr('value'))>0) {
 		if (_all===true) {
@@ -47,7 +77,7 @@ function contest_setqsostate(_this,_all) {
 		            }
 		            if (_all===true) {
 		            	var _txt = "QSO <?php echo str_replace("'","\'",$this->lang->line('pluginsext_updated')); ?>";
-		            	res.nbv = _txt + " : " + res.nbv;
+		            	res.qso_nbv = _txt + " : " + res.qso_nbv;
 		            	$('.contest_listinfo_nbv').show();
 		            } else {
 			            _this.attr('style','cursor:pointer; '+res.icon_info.c);
@@ -56,16 +86,16 @@ function contest_setqsostate(_this,_all) {
 			            _this.find('i').attr('class','fas '+res.icon_info.i);
 			            _this.find('i').attr('class','fas '+res.icon_info.i);
 			        }
-		            $('.contest_listinfo_nbv').html(res.nbv);
+		            $('.contest_listinfo_nbv').html(res.qso_nbv);
 	            }
 	    });
 	} else {
 		var _txt = "<?php echo str_replace("'","\'",$this->lang->line('contest_save_first_before_action')); ?>";
 		pluginsext_alert('danger',_txt);
 	}
-}
+} */
 // change state of contest qso //
-function contest_setqsodistance(_this,_all) {
+/* function contest_setqsodistance(_this,_all) {
 	pluginsext_alert('hide','');
 	if (parseInt($('input[name=pluginsdata_id]').attr('value'))>0) {
 		if (_all===true) {
@@ -94,14 +124,14 @@ function contest_setqsodistance(_this,_all) {
 		            } else {
 		            	// TODO
 			        }
-		            $('.contest_listinfo_distance').html(res.nbv);
+		            $('.contest_listinfo_distance').html(res.qso_nbv);
 	            }
 	    });
 	} else {
 		var _txt = "<?php echo str_replace("'","\'",$this->lang->line('contest_save_first_before_action')); ?>";
 		pluginsext_alert('danger',_txt);
 	}
-}
+} */
 // get content log file //
 function contest_getcontentlog(_this) {
 	pluginsext_alert('hide','');
@@ -176,41 +206,41 @@ function contest_copyFromOther() {
 		var _pe_contest_log_type = $('#pluginsdata_data__contest_log_type').val();
 
 	    $.ajax({
-	            url: pluginext_contest_base_url+'index.php/pluginsext/ws/contest/ws_getcontestlist/'+$('input[name=pluginsdata_id]').attr('value'),
-	            type: 'POST', dataType: 'json',
-	            data: { pe_contest_station_id:_pe_contest_station_id, pe_contest_log_type:_pe_contest_log_type },
-	            error: function() { console.log('ERROR: ajax contest_copyFromOther() function return error.'); },
-	            success: function(res) {
-					if (res.pe_stat!="OK") {
-		            	var _msg = "ERROR found";
-		            	if (typeof res.pe_msg != "undefined") { _msg = res.pe_msg; }
-						pluginsext_alert('danger',_msg);
-						return false;
-		            }
-		           	var _html = "<div class=\"alert alert-warning\"><?php echo str_replace('"','\"',$this->lang->line('contest_copy_paramlog_warning')); ?></div>";
-		           		_html += "<table class=\"table table-sm table-striped\" class=\"table table-striped\">";
-		           		_html += "<thead><tr><th scope=\"col\"><?php echo $this->lang->line('contest_name'); ?></th><th></th></tr></thead>";
-                		_html += "<tbody>";
-                		$.each(res.contest_list, function(k, contestOne) {
-						var contest_edi = "{'log_edi_PAdr1':'"+contestOne.log_edi_PAdr1.replaceAll("'","\'")+"', 'log_edi_PAdr2':'"+contestOne.log_edi_PAdr2.replaceAll("'","\'")+"', 'log_edi_RAdr1':'"+contestOne.log_edi_RAdr1.replaceAll("'","\'")+"', 'log_edi_RAdr2':'"+contestOne.log_edi_RAdr2.replaceAll("'","\'")+"', 'log_edi_RCall':'"+contestOne.log_edi_RCall.replaceAll("'","\'")+"', 'log_edi_RCity':'"+contestOne.log_edi_RCity.replaceAll("'","\'")+"', 'log_edi_RCoun':'"+contestOne.log_edi_RCoun.replaceAll("'","\'")+"', 'log_edi_RHBBS':'"+contestOne.log_edi_RHBBS.replaceAll("'","\'")+"', 'log_edi_RName':'"+contestOne.log_edi_RName.replaceAll("'","\'")+"', 'log_edi_RPhon':'"+contestOne.log_edi_RPhon.replaceAll("'","\'")+"', 'log_edi_RPoCo':'"+contestOne.log_edi_RPoCo.replaceAll("'","\'")+"', 'log_edi_SAntH1':'"+contestOne.log_edi_SAntH1.replaceAll("'","\'")+"', 'log_edi_SAntH2':'"+contestOne.log_edi_SAntH2.replaceAll("'","\'")+"', 'log_edi_SAnte':'"+contestOne.log_edi_SAnte.replaceAll("'","\'")+"', 'log_edi_SPowe':'"+contestOne.log_edi_SPowe.replaceAll("'","\'")+"', 'log_edi_SRXEq':'"+contestOne.log_edi_SRXEq.replaceAll("'","\'")+"', 'log_edi_STXEq':'"+contestOne.log_edi_STXEq.replaceAll("'","\'")+"' }";
-                			_html += "<tr><td><a class=\"contest_docopy\" href=\"#\" data-edi=\""+contest_edi+"\">"+contestOne.contest_name+"</a></td><td>"+contestOne.log_edi_PAdr1+" "+contestOne.log_edi_PAdr2+"</td></tr>";
-                		});
-                		_html += "</tbody></table>";
-					BootstrapDialog.show({
-						title: '<?php echo $this->lang->line('contest_copy_paramlog'); ?>',
-						cssClass: 'contest_copy',
-						size: BootstrapDialog.SIZE_WIDE,
-						nl2br: false,
-						message: _html,
-						onshown: function(dialog) {
-							$('.contest_docopy').off('click').on('click',function() {
-								var _oEdi = JSON.parse($(this).attr('data-edi').replaceAll("'",'"'));
-								$.each(_oEdi, function(k,v) { $('input[name=pluginsdata_data__'+k+']').attr('value',v); });
-								$('.bootstrap-dialog-close-button').click();
-							})
-						},
-					});
+            url: pluginext_contest_base_url+'index.php/pluginsext/ws/contest/ws_getcontestlist/'+$('input[name=pluginsdata_id]').attr('value'),
+            type: 'POST', dataType: 'json',
+            data: { pe_contest_station_id:_pe_contest_station_id, pe_contest_log_type:_pe_contest_log_type },
+            error: function() { console.log('ERROR: ajax contest_copyFromOther() function return error.'); },
+            success: function(res) {
+				if (res.pe_stat!="OK") {
+	            	var _msg = "ERROR found";
+	            	if (typeof res.pe_msg != "undefined") { _msg = res.pe_msg; }
+					pluginsext_alert('danger',_msg);
+					return false;
 	            }
+	           	var _html = "<div class=\"alert alert-warning\"><?php echo str_replace('"','\"',$this->lang->line('contest_copy_paramlog_warning')); ?></div>";
+	           		_html += "<table class=\"table table-sm table-striped\" class=\"table table-striped\">";
+	           		_html += "<thead><tr><th scope=\"col\"><?php echo $this->lang->line('contest_name'); ?></th><th></th></tr></thead>";
+            		_html += "<tbody>";
+            		$.each(res.contest_list, function(k, contestOne) {
+					var contest_edi = "{'log_edi_PAdr1':'"+contestOne.log_edi_PAdr1.replaceAll("'","\'")+"', 'log_edi_PAdr2':'"+contestOne.log_edi_PAdr2.replaceAll("'","\'")+"', 'log_edi_RAdr1':'"+contestOne.log_edi_RAdr1.replaceAll("'","\'")+"', 'log_edi_RAdr2':'"+contestOne.log_edi_RAdr2.replaceAll("'","\'")+"', 'log_edi_RCall':'"+contestOne.log_edi_RCall.replaceAll("'","\'")+"', 'log_edi_RCity':'"+contestOne.log_edi_RCity.replaceAll("'","\'")+"', 'log_edi_RCoun':'"+contestOne.log_edi_RCoun.replaceAll("'","\'")+"', 'log_edi_RHBBS':'"+contestOne.log_edi_RHBBS.replaceAll("'","\'")+"', 'log_edi_RName':'"+contestOne.log_edi_RName.replaceAll("'","\'")+"', 'log_edi_RPhon':'"+contestOne.log_edi_RPhon.replaceAll("'","\'")+"', 'log_edi_RPoCo':'"+contestOne.log_edi_RPoCo.replaceAll("'","\'")+"', 'log_edi_SAntH1':'"+contestOne.log_edi_SAntH1.replaceAll("'","\'")+"', 'log_edi_SAntH2':'"+contestOne.log_edi_SAntH2.replaceAll("'","\'")+"', 'log_edi_SAnte':'"+contestOne.log_edi_SAnte.replaceAll("'","\'")+"', 'log_edi_SPowe':'"+contestOne.log_edi_SPowe.replaceAll("'","\'")+"', 'log_edi_SRXEq':'"+contestOne.log_edi_SRXEq.replaceAll("'","\'")+"', 'log_edi_STXEq':'"+contestOne.log_edi_STXEq.replaceAll("'","\'")+"' }";
+            			_html += "<tr><td><a class=\"contest_docopy\" href=\"#\" data-edi=\""+contest_edi+"\">"+contestOne.contest_name+"</a></td><td>"+contestOne.log_edi_PAdr1+" "+contestOne.log_edi_PAdr2+"</td></tr>";
+            		});
+            		_html += "</tbody></table>";
+				BootstrapDialog.show({
+					title: '<?php echo $this->lang->line('contest_copy_paramlog'); ?>',
+					cssClass: 'contest_copy',
+					size: BootstrapDialog.SIZE_WIDE,
+					nl2br: false,
+					message: _html,
+					onshown: function(dialog) {
+						$('.contest_docopy').off('click').on('click',function() {
+							var _oEdi = JSON.parse($(this).attr('data-edi').replaceAll("'",'"'));
+							$.each(_oEdi, function(k,v) { $('input[name=pluginsdata_data__'+k+']').attr('value',v); });
+							$('.bootstrap-dialog-close-button').click();
+						})
+					},
+				});
+            }
 	    });
 	}
 }
@@ -241,6 +271,128 @@ function contest_category_add() {
 function contest_category_delete(v) {
 	$('.contest_score_category[data-categoryid="'+v+'"]').remove();
 }
+// set plot for time graph //
+function contest_plotTimeplotterChart(_jsondata,_renderTo) {
+	var color = ifDarkModeThemeReturn('white', 'grey');
+	var options = {
+		chart: { type:'column', renderTo:_renderTo, backgroundColor:getBodyBackground() },
+		title: { text:'', style:{ color:color } },
+		xAxis: { categories: [], type:"category", labels:{ style:{ color:color } } },
+		yAxis: { min:0, title: { text:'', style:{ color:color } }, labels:{ style:{ color:color } } },
+		rangeSelector: { selected:1 },
+		legend: { itemStyle:{ color:color } },
+		plotOptions: { column:{ stacking:'normal' } },
+		series: []
+	};
+	var serieBand = { };
+	$.each(_jsondata.data_bands, function(k, bn){
+		eval('serieBand.b'+(bn.replace('.','_'))+' = { "name":"'+bn+'", "data":[] };');
+	});
+	$.each(_jsondata.data_times, function(){
+		var _this_time = this;
+		options.xAxis.categories.push(_this_time.label_time);
+		$.each(_jsondata.data_bands, function(k, bn){ eval('serieBand.b'+bn+'.data.push(((_this_time.bands[bn] === undefined)?0:_this_time.bands[bn]))'); });
+	});
+	$.each(serieBand, function(k, data){ options.series.push(data); });
+	var chart = new Highcharts.Chart(options);
+}
+// get stat for array contest info //
+function contest_getgetstatarray() {
+	_pe_contest_id = $('input[name=pluginsdata_id]').attr('value');
+    $.ajax({
+        url: pluginext_contest_base_url+'index.php/pluginsext/ws/contest/ws_getstatarray',
+        type: 'POST', dataType: 'json',
+        data: { pe_contest_id:_pe_contest_id },
+        error: function() { console.log('ERROR: ajax contest_getgetstatarray() function return error.'); },
+        success: function(res) {
+			if (res.pe_stat!="OK") {
+            	var _msg = "ERROR found";
+            	if (typeof res.pe_msg != "undefined") { _msg = res.pe_msg; }
+				pluginsext_alert('danger',_msg);
+				return false;
+            }
+            var _html = "";
+            var _error = false;
+            console.log(res);
+            if ($('.pe_contest_score_array').attr('data-update')=='0') {
+	            if (typeof res.d.score.title != "undefined") {
+					_html += "<thead><tr>";
+					var _sizecoltitle=parseInt(100)/parseInt(res.d.score.title.length);
+	            	$.each(res.d.score.title, function(k, v){
+	            		eval('var _jtitle = res.d.list_score_tab_col.'+v+';');
+	            		if (_jtitle.t=='p') { _html += "<th scope='col' class='bg-light' style='width:"+_sizecoltitle+"%;color:var(--dark);'>"+_jtitle.nf+"</th>"; }
+	            	});
+	            	_html += "</tr></thead>";
+	            	$('.pe_contest_score_array').html(_html);
+	            } else { _error = true; }
+	            if ((!_error) && (typeof res.d.score.bands != "undefined")) {
+					_html = "";
+					res.d.score.title.shift();
+	            	$.each(res.d.score.bands, function(k, v){ 
+	            		_html += "<tr><td class='pe_contest_score_field "+((v=='TOTAL')?"bg-light' style='color:var(--dark);'":"")+"'>"+v+"</td>";
+	            		var _total = 0;
+	            		$.each(res.d.score.title, function(k2, v2){ 
+	            			eval('var _jtitle = res.d.list_score_tab_col.'+v2+';');
+	           				if (_jtitle.t=='p') { _html += "<td class='pe_contest_score_field "+((v=='TOTAL')?"bg-light' style='color:var(--dark);'":"")+"' data-band='"+v+"' data-col='"+v2+"'>0</td>"; }
+	            		});
+	            		_html += "</tr>";
+	            	});
+	            	$('.pe_contest_score_array thead').after(_html);
+	            	$('.pe_contest_score_final span').html(res.d.score.final);
+	            } else { _error = true; }
+	            if (_error) {
+	            	// TODO //
+	            }
+            }
+            if (typeof res.d.score.result != "undefined") {
+            	$.each(res.d.score.result, function(band, col){
+            		var _qso_moreinfo = "";
+            		$.each(col, function(k, v){ 
+	            		eval('var _jtitle = res.d.list_score_tab_col.'+k+';');
+	            		if (_jtitle.t=='p') { $('.pe_contest_score_field[data-band="'+band+'"][data-col="'+k+'"]').html(v); }
+	            			else if (_jtitle.t=='i') { _qso_moreinfo += _jtitle.nf+" : "+v+"\n"; }
+	            	}); 
+	            	if (_qso_moreinfo!="") $('.pe_contest_score_field[data-band="'+band+'"][data-col="QSO"]').attr("title",_qso_moreinfo);
+	            });
+            	var _total = 0;
+            	$.each(res.d.score.title, function(k, col){ 
+            		_total = 0;
+            		$('.pe_contest_score_field[data-col="'+col+'"]').each(function(){ _total += parseInt($(this).html()); }); 
+            		$('.pe_contest_score_field[data-band="TOTAL"][data-col="'+col+'"]').html(_total);
+            	});
+            	$('.pe_contest_score_array').attr('data-update','1');
+            }
+        }
+    });
+}
+//
+function contest_elapse_zone(_this) {
+	if (_this.find('i').hasClass('fa-caret-down')) {
+		_this.closest('.card-header').next('.card-body').hide();
+		_this.find('i').removeClass('fa-caret-down').addClass('fa-caret-left');
+	} else {
+		_this.closest('.card-header').next('.card-body').show();
+		_this.find('i').removeClass('fa-caret-left').addClass('fa-caret-down');
+	}
+}
+//
+function contest_cqww_score_from_cq_api() { // TODO //
+	var _year = $('.contest_cqww_info').attr('data-year');
+	var _callsign = $('.contest_cqww_info').attr('data-call');
+	var _url_cq_api = "https://cqww.com/api/get/score/ph"+"/"+_year+"/"+_callsign; // example=https://cqww.com/api/get/score/ph/2023/f4ans
+	//$.get(_url_cq_api);
+    /*var _res = $.ajax({
+        url: _url_cq_api,
+        type: 'GET', async: false
+        //dataType: 'jsonp',
+        //error: function() { console.log('ERROR: ajax contest_cqww_score_from_cq_api() function return error.'); },
+        //success: function(res) {console.log(res); }
+    }).responseText;*/
+}
+
+//---------------------------------------------------
+//function 
+//
 
 // === LIST ==========
 if (pluginext_location.substring(pluginext_location.length-13)=="/menu/contest") {
@@ -251,11 +403,11 @@ if (pluginext_location.substring(pluginext_location.length-13)=="/menu/contest")
 	});
 }
 if (pluginext_location.indexOf("/menu/contest/list_qso/")>0) {
+	$('.pe_contest_validbtn').off('click').on('click',function() { contest_setqsostate($(this),false);  });
 	$('#contest_list_qso_table').DataTable({ 
 		//columns:[null,null,null,null,null,null,null,null,null,{orderable:false}],
 		order: [[0,'desc']], pageLength:25
 	});
-	$('.pe_contest_validbtn').off('click').on('click',function() { contest_setqsostate($(this),false); });
 }
 
 // === LOGS EXPORT ==========
@@ -271,42 +423,36 @@ if (pluginext_location.indexOf("/menu/contest/update")>0) {
 	    $('#pluginsdata_data__contest_dateEnd').datetimepicker({'format':'YYYY-MM-DD'});
 	    if ((pluginext_contest_log_type != "none") && (pluginext_contest_log_type != "")) { contest_logtype_view(pluginext_contest_log_type); }
 	});
-	$('.contest_selectBox').off('click').on('click', function(){
-	    if ($('#contest_checkboxes').is(":hidden")) { $('#contest_checkboxes').show(); } else { $('#contest_checkboxes').hide(); }
-	});
-	$('#contest_checkboxes').off('mouseleave').on('mouseleave', function(){
-		if ($('#contest_checkboxes').is(":visible")) { $('#contest_checkboxes').hide(); }
-	});
-
 	$('#pluginsdata_data__contest_log_type').off('change').on('change', function(){ contest_logtype_view($(this).val()); });
 
-	$('#contest_checkboxes input[type="checkbox"]').off('click').on('click', function(){ 
+	$('.contest_selectBox').off('click').on('click', function(){
+		var _boxcontent = $(this).attr('data-boxcontent');
+	    if ($('.contest_selectBox_data[data-boxcontent="'+_boxcontent+'"]').is(":hidden")) { $('.contest_selectBox_data[data-boxcontent="'+_boxcontent+'"]').show(); } else { $('.contest_selectBox_data[data-boxcontent="'+_boxcontent+'"]').hide(); }
+	});
+	$('.contest_selectBox_data').off('mouseleave').on('mouseleave', function(){
+	    if ($(this).is(":visible")) { $(this).hide(); }
+	});
+	$('.contest_selectBox_data input[type="checkbox"]').off('click').on('click', function(){ 
+		var _boxcontent = $(this).closest('.contest_selectBox_data').attr('data-boxcontent');
 		var _checked = "";
-		// multiplicator by band is not used finaly //
-		//var _multiHtmlOne = "<label for=\"pluginsdata_data__contest_bands_multi_%band%\" style=\"margin-right:10px;\">%band% : <input type=\"text\" value=\"%bandval%\" id=\"pluginsdata_data__contest_bands_multi_%band%\" name=\"pluginsdata_data__contest_bands_multi_%_band%\" style=\"margin:0px 5px;padding:0.375rem 0.75rem;width:60px;\"/></label>";
-		//var _multiHtmlFull = "";
-		//var _multitmp = "1";
-		if ($('#contest_checkboxes input[type="checkbox"]:checked').length > 0) {
-			$('#contest_checkboxes input[type="checkbox"]:checked').each(function() {
-				//var _multiHtmlTmp = _multiHtmlOne;
+		if ($('.contest_selectBox_data[data-boxcontent="'+_boxcontent+'"] input[type="checkbox"]:checked').length > 0) {
+			$('.contest_selectBox_data[data-boxcontent="'+_boxcontent+'"] input[type="checkbox"]:checked').each(function() {
 				_checked += $(this).attr('value') + ","; 
-				//if (typeof $('.contest_log_param_edi #pluginsdata_data__contest_bands_multi_'+$(this).attr('value')).attr('value') == 'undefined') { _multitmp = "1"; } 
-				//	else { _multitmp = $('.contest_log_param_edi #pluginsdata_data__contest_bands_multi_'+$(this).attr('value')).attr('value'); }
-				//_multiHtmlFull += _multiHtmlTmp.replaceAll('%band%',$(this).attr('value')).replaceAll('%bandval%',_multitmp);
 			});
-			//$('.contest_bands_multi_list').html(_multiHtmlFull);
 		} else { 
-			_checked = pluginext_contest_bandsselect; 
-			//$('.contest_bands_multi_list').html(pluginext_contest_bandsselect);
+			_checked = pluginext_contest_select_value; 
 		}
 		if (_checked.substring(_checked.length-1)==",") { _checked = _checked.substring(0,_checked.length-1); }
-		$('.contest_selectBox select option').html(_checked);
+		$('.contest_selectBox[data-boxcontent="'+_boxcontent+'"] select option').html(_checked);
 	});
+
 	$('#pluginsext_contest').submit(function(event) {
-		if ($('.contest_selectBox select option').html()==pluginext_contest_bandsselect) { $('.contest_selectBox select option').html(""); }
+		if ($('.contest_selectBox[data-boxcontent="contest_bands"] select option').html()==pluginext_contest_select_value) { $('.contest_selectBox[data-boxcontent="contest_bands"] select option').html(""); }
+		if ($('.contest_selectBox[data-boxcontent="contest_score_conf_col"] select option').html()==pluginext_contest_select_value) { $('.contest_selectBox[data-boxcontent="contest_score_conf_col"] select option').html(""); }
 	});
-	$('.pe_contest_btn_updateall_name').off('click').on('click',function() { contest_setqsostate(false,true); });
-	$('.pe_contest_btn_updateall_distance').off('click').on('click',function() { contest_setqsodistance(false,true); });
+	//$('.pe_contest_btn_updateall_name').off('click').on('click',function() { contest_setqsostate(false,true); });
+	//$('.pe_contest_btn_updateall_distance').off('click').on('click',function() { contest_setqsodistance(false,true); });
+	$('.pe_contest_btn_calcul_pts').off('click').on('click',function() { contest_setqsopts(false,true); });
 	$('.pe_contest_btn_goto_cabrillo').off('click').on('click',function() { contest_cabrilloexport(); });
 	$('.pe_contest_btn_category_add').off('click').on('click',function() { contest_category_add(); });
 	
@@ -315,34 +461,13 @@ if (pluginext_location.indexOf("/menu/contest/update")>0) {
 // === STATISTIQUES ==========
 if (pluginext_location.indexOf("/menu/contest/statistiques")>0) {
 	$(document).ready( function (){
-	    plotTimeplotterChart(JSON.parse($('#pe_contest_timeplotter_data').html()),'pe_contest_timeplotter_view');
+	    contest_plotTimeplotterChart(JSON.parse($('#pe_contest_timeplotter_data').html()),'pe_contest_timeplotter_view');
+	    contest_getgetstatarray();
+	    if ($('.contest_score_by_category').length>0) { $('.contest_not_result_yet').hide(); } else { contest_elapse_zone($('.contest_not_result_yet').closest('.card-body').prev('.card-header').find('.contest_elapse_zone')); }
+	    if ($('.contest_cqww_info').length>0) { contest_cqww_score_from_cq_api(); }
 	});
+	$('.contest_elapse_zone').off('click').on('click',function() { contest_elapse_zone($(this)); });
 
-	function plotTimeplotterChart(_jsondata,_renderTo) {
-		var color = ifDarkModeThemeReturn('white', 'grey');
-		var options = {
-			chart: { type:'column', renderTo:_renderTo, backgroundColor:getBodyBackground() },
-			title: { text:'', style:{ color:color } },
-			xAxis: { categories: [], type:"category", labels:{ style:{ color:color } } },
-			yAxis: { min:0, title: { text:'', style:{ color:color } }, labels:{ style:{ color:color } } },
-			rangeSelector: { selected:1 },
-			legend: { itemStyle:{ color:color } },
-			plotOptions: { column:{ stacking:'normal' } },
-			series: []
-		};
-
-		var serieBand = { };
-		$.each(_jsondata.data_bands, function(k, bn){
-			eval('serieBand.b'+(bn.replace('.','_'))+' = { "name":"'+bn+'", "data":[] };');
-		});
-		$.each(_jsondata.data_times, function(){
-			var _this_time = this;
-			options.xAxis.categories.push(_this_time.label_time);
-			$.each(_jsondata.data_bands, function(k, bn){ eval('serieBand.b'+bn+'.data.push(((_this_time.bands[bn] === undefined)?0:_this_time.bands[bn]))'); });
-		});
-		$.each(serieBand, function(k, data){ options.series.push(data); });
-		var chart = new Highcharts.Chart(options);
-	}
 }
 
 </script>

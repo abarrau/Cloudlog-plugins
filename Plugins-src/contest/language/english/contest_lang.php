@@ -5,9 +5,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 $lang['pluginsext_allow_helpertxt'] = 'Active this plugin';
 $lang['contest_bddcoluserdef_namecontest'] = '[technical] Name of field for "Contest ID"';
+$lang['contest_bddcoluserdef_pts'] = '[technical] ame of field for save "Points" value';
 $lang['contest_allow_screen_oncontestpage'] = 'Show scores (contest page)';
-$lang['contest_period_not_activity_allowed'] = 'Période d\'inactivité autorisée (entre 2 QSO)';
-$lang['contest_period_timeplotter'] = 'Période groupée (graph heure)';
+$lang['contest_period_not_activity_allowed'] = 'Allowed period of inactivity (between 2 QSO)';
+$lang['contest_period_timeplotter'] = 'Grouped period (hour graph)';
 
 $lang['contest_list'] = 'Contest List';
 $lang['contest_name'] = 'Contest Name';
@@ -18,21 +19,36 @@ $lang['contest_date_end'] = 'End date';
 $lang['contest_score'] = 'Result';
 $lang['contest_add'] = 'Add new contest';
 $lang['contest_statistic'] = 'Statistics';
-$lang['contest_nb_qso'] = 'Nb QSO';
+$lang['contest_nb_qso'] = 'Nbr QSO';
+$lang['contest_countdown'] = 'Countdown';
 $lang['contest_bands'] = 'Bands';
-$lang['contest_bandsselect'] = 'Select bands';
 $lang['contest_include'] = 'Included';
-$lang['contest_period_activity'] = 'Activity duration';
-$lang['contest_period_inactivity'] = 'Inactivity';
+$lang['contest_duration'] = 'Duration';
+$lang['contest_active'] = 'Active';
+$lang['contest_inactive'] = 'Inactive';
+$lang['contest_select_value'] = 'Selected values';
+$lang['contest_new'] = 'New';
+$lang['contest_qso_by_hour'] = 'QSO/Hour';
+$lang['contest_not_result_yet'] = 'No results available.';
+$lang['contest_dup'] = 'Duplicate';
+$lang['contest_best_distance'] = 'Best distance';
+$lang['contest_info'] = 'Info';
+
+$lang['contest_score_tab_col'] = 'Data "in column"';
+$lang['contest_score_tab_row'] = 'Data "in row"';
+$lang['contest_score_synth'] = 'Summary Score';
+$lang['contest_score_final'] = 'Summary Score';
+$lang['contest_score_calcul_point_method'] = 'Points calculation model';
 
 $lang['contest_statistics'] = 'Contest\'s Statistics';
-$lang['contest_stat_global'] = 'Informations';
+$lang['contest_stat_global'] = 'Global Statistics';
 $lang['contest_stat_bytime'] = 'by hours';
 $lang['contest_stat_nb_qso_descrip'] = 'Number of QSOs counted for the competition, over the entire period corresponding to the competition';
 
 $lang['contest_conf'] = 'Settings';
 $lang['contest_conf_log'] = 'Log\'s setting';
-$lang['contest_conf_score'] = 'Score';
+$lang['contest_conf_score_tab'] = 'Scoreboard setting';
+$lang['contest_conf_offical_result'] = 'Official result(s)';
 $lang['contest_conf_other'] = 'Others Settings';
 $lang['contest_conf_multi'] = 'Multi';
 
@@ -80,11 +96,9 @@ $lang['contest_score_nbparticipant'] = 'Number of participants';
 $lang['contest_score_finalscore'] = 'Final Score';
 $lang['contest_score_category_add'] = 'Add Category';
 
-$lang['contest_other_name_autoupdate'] = "Automatic name update (logbook)";
+$lang['contest_other_update_pts'] = "Points Calculation";
+$lang['contest_other_update_pts_alert'] = "Do you confirm the update of all QSOs?<br>(WARNING: this will delete the names already existing in the 'user defined' field of the LOG table)";
 $lang['contest_other_autoupdate_now'] = "Update all now";
-$lang['contest_other_autoupdate_now_alert'] = "Do you confirm the update of all QSOs?<br>(WARNING: this will delete the names already existing in the 'user defined' field of the LOG table)";
-$lang['contest_other_distance_autoupdate'] = "Automatic distance update (logbook)";
-
 $lang['contest_save_first_before_action'] = "You must save the first time before doing this action.";
 $lang['contest_cancel_confirm_txt'] = 'Do you confirm the cancellation of the creation/modifications?';
 $lang['contest_copy_paramlog_warning'] = 'At the selection of the contest, all the data of the "'.$lang['contest_log_Presp'].'" and "'.$lang['contest_log_Pinfos'].'" sections will be automatically copied.<br/>This action will overwrite existing data.';
