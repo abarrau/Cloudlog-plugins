@@ -9,6 +9,8 @@ function pluginsext_addcontexte2qso() {
     $('.modal.qso-dialog #qsodetails tbody').append(_tr);
 }
 
+var pluginext_contest_log_debug = false;
+
 <?php if ($this->uri->segment(1) == "pluginsext" && $this->uri->segment(3) == "contest") { ?>
 
 var pluginext_location = window.location.pathname;
@@ -29,9 +31,9 @@ function contest_setqsopts(_this) {
 	            url: pluginext_contest_base_url+'index.php/pluginsext/ws/contest/ws_setqsopts/'+$('input[name=pluginsdata_id]').attr('value'),
 	            type: 'POST', dataType: 'json',
 	            data: { },
-	            error: function() { console.log('ERROR: ajax contest_setqsopts() function return error.'); },
+	            error: function() { console.log('[Cloudlog][ERROR] ajax contest_setqsopts() function return error.'); },
 	            success: function(res) {
-					console.log(res);
+					if (pluginext_contest_log_debug) console.log(res);
 		            if (res.pe_stat!="OK") {
 		            	var _msg = "ERROR found";
 		            	if (typeof res.pe_msg != "undefined") { _msg = res.pe_msg; }
@@ -66,9 +68,9 @@ function contest_setqsopts(_this) {
 	            url: pluginext_contest_base_url+'index.php/pluginsext/ws/contest/ws_setqsostate/'+$('input[name=pluginsdata_id]').attr('value'),
 	            type: 'POST', dataType: 'json',
 	            data: { pe_contest_qsostate:_pe_contest_qsostate, pe_contest_qsoid:_pe_contest_qsoid, pe_contest_all_update:_all},
-	            error: function() { console.log('ERROR: ajax contest_setqsostate() function return error.'); },
+	            error: function() { console.log('[Cloudlog][ERROR] ajax contest_setqsostate() function return error.'); },
 	            success: function(res) {
-					//console.log(res);
+					if (pluginext_contest_log_debug) console.log(res);
 		            if (res.pe_stat!="OK") {
 		            	var _msg = "ERROR found";
 		            	if (typeof res.pe_msg != "undefined") { _msg = res.pe_msg; }
@@ -109,9 +111,9 @@ function contest_setqsopts(_this) {
 	            url: pluginext_contest_base_url+'index.php/pluginsext/ws/contest/ws_setdistance/'+$('input[name=pluginsdata_id]').attr('value'),
 	            type: 'POST', dataType: 'json',
 	            data: { pe_contest_qsoid:_pe_contest_qsoid, pe_contest_all_update:_all},
-	            error: function() { console.log('ERROR: ajax contest_setqsostate() function return error.'); },
+	            error: function() { console.log('[Cloudlog][ERROR] ajax contest_setqsostate() function return error.'); },
 	            success: function(res) {
-					console.log(res);
+					if (pluginext_contest_log_debug) console.log(res);
 		            if (res.pe_stat!="OK") {
 		            	var _msg = "ERROR found";
 		            	if (typeof res.pe_msg != "undefined") { _msg = res.pe_msg; }
@@ -142,7 +144,7 @@ function contest_getcontentlog(_this) {
 	            url: pluginext_contest_base_url+'index.php/pluginsext/ws/contest/ws_getexportlog/'+$('input[name=pluginsdata_id]').attr('value'),
 	            type: 'POST', dataType: 'json',
 	            data: { pe_contest_band:_pe_contest_band, pe_contest_log_type:_pe_contest_log_type },
-	            error: function() { console.log('ERROR: ajax contest_getcontentlog() function return error.'); },
+	            error: function() { console.log('[Cloudlog][ERROR] ajax contest_getcontentlog() function return error.'); },
 	            success: function(res) {
 					if (res.pe_stat!="OK") {
 		            	var _msg = "ERROR found";
@@ -150,7 +152,7 @@ function contest_getcontentlog(_this) {
 						pluginsext_alert('danger',_msg);
 						return false;
 		            }
-	            	//console.log(res);
+	            	if (pluginext_contest_log_debug) console.log(res);
 	            	$('.contest_log_content').empty();
 	            	if (res.log_content != "") { 
 	            		$('.contest_log_content').html(res.log_content.replace(/\n/g, "<br/>"));
@@ -161,7 +163,7 @@ function contest_getcontentlog(_this) {
 	            		var isIE = false || !!document.documentMode;
 					    if (isIE) {
 					        //window.navigator.msSaveBlob(_myBlob, _fileName);
-					        console.log('Not download with IE'); 
+					        console.log('[Cloudlog][ERROR] Not download with IE'); 
 					    } else {
 					        var url = window.URL || window.webkitURL;
 					        var a = $('.contest_btn_log_download');
@@ -194,7 +196,7 @@ function contest_back() {
 }
 // confirm delete //
 function contest_delete_confirm(_id) { 
-	if (parseInt(_id)<=0) { console.log('[EROOR] Cloudlog: id for delete, not a number ('+_id+') !'); return false; }
+	if (parseInt(_id)<=0) { console.log('[Cloudlog][ERROR] id for delete, not a number ('+_id+') !'); return false; }
 	var _txt = "<?php echo str_replace("'","\'",$this->lang->line('pluginsext_delete_confirm_txt')); ?>";
 	var url_delete = "<?php echo (isset($pluginsext_url2menu))?$pluginsext_url2menu.'/delete/':''; ?>";
 	if (confirm(_txt) == true) { if (url_delete!="") { window.location = url_delete+_id; }} 
@@ -209,7 +211,7 @@ function contest_copyFromOther() {
             url: pluginext_contest_base_url+'index.php/pluginsext/ws/contest/ws_getcontestlist/'+$('input[name=pluginsdata_id]').attr('value'),
             type: 'POST', dataType: 'json',
             data: { pe_contest_station_id:_pe_contest_station_id, pe_contest_log_type:_pe_contest_log_type },
-            error: function() { console.log('ERROR: ajax contest_copyFromOther() function return error.'); },
+            error: function() { console.log('[Cloudlog][ERROR] ajax contest_copyFromOther() function return error.'); },
             success: function(res) {
 				if (res.pe_stat!="OK") {
 	            	var _msg = "ERROR found";
@@ -264,7 +266,6 @@ function contest_category_add() {
 		_html += "<div class=\"form-group col-sm-2\"><input type=\"text\" class=\"form-control\" id=\"pluginsdata_data__contest_score_finalscore_"+_new+"\" name=\"pluginsdata_data__contest_score_finalscore_"+_new+"\" value=\"\" /></div>";
 		_html += "<div class=\"form-group col-sm-1\"><a href=\"javascript:contest_category_delete("+_new+");\" class=\"btn btn-danger btn-sm\" title=\"\"><i class=\"fas fa-trash-alt\"></i></a></div>";
 		_html += "</div>";
-	console.log('n='+_new);
 	$(_html).insertAfter('.contest_score_category[data-categoryid="'+_last+'"]');
 }
 // delete category score to contest //
@@ -303,7 +304,7 @@ function contest_getgetstatarray() {
         url: pluginext_contest_base_url+'index.php/pluginsext/ws/contest/ws_getstatarray',
         type: 'POST', dataType: 'json',
         data: { pe_contest_id:_pe_contest_id },
-        error: function() { console.log('ERROR: ajax contest_getgetstatarray() function return error.'); },
+        error: function() { console.log('[Cloudlog][ERROR] ajax contest_getgetstatarray() function return error.'); },
         success: function(res) {
 			if (res.pe_stat!="OK") {
             	var _msg = "ERROR found";
@@ -313,7 +314,7 @@ function contest_getgetstatarray() {
             }
             var _html = "";
             var _error = false;
-            console.log(res);
+            if (pluginext_contest_log_debug) console.log(res);
             if ($('.pe_contest_score_array').attr('data-update')=='0') {
 	            if (typeof res.d.score.title != "undefined") {
 					_html += "<thead><tr>";
@@ -357,8 +358,14 @@ function contest_getgetstatarray() {
             	var _total = 0;
             	$.each(res.d.score.title, function(k, col){ 
             		_total = 0;
-            		$('.pe_contest_score_field[data-col="'+col+'"]').each(function(){ _total += parseInt($(this).html()); }); 
-            		$('.pe_contest_score_field[data-band="TOTAL"][data-col="'+col+'"]').html(_total);
+            		if (col=='PTS_Q') {
+            			if ($('.pe_contest_score_field[data-band="TOTAL"][data-col="PTS"]').length==1) {
+							_total = parseFloat(parseInt($('.pe_contest_score_field[data-band="TOTAL"][data-col="PTS"]').html()) / parseInt($('.pe_contest_score_field[data-band="TOTAL"][data-col="QSO"]').html())).toFixed(1);
+						}
+            		} else {
+	            		$('.pe_contest_score_field[data-col="'+col+'"]').each(function(){ _total += parseInt($(this).html()); }); 
+	            	}
+	            	$('.pe_contest_score_field[data-band="TOTAL"][data-col="'+col+'"]').html(_total);
             	});
             	$('.pe_contest_score_array').attr('data-update','1');
             }
@@ -385,7 +392,7 @@ function contest_cqww_score_from_cq_api() { // TODO //
         url: _url_cq_api,
         type: 'GET', async: false
         //dataType: 'jsonp',
-        //error: function() { console.log('ERROR: ajax contest_cqww_score_from_cq_api() function return error.'); },
+        //error: function() { console.log('[Cloudlog][ERROR] ajax contest_cqww_score_from_cq_api() function return error.'); },
         //success: function(res) {console.log(res); }
     }).responseText;*/
 }
@@ -503,9 +510,9 @@ function updateCabrilloForm() {
         url: pluginext_contest_base_url+'index.php/pluginsext/ws/contest/ws_getexportlog/'+pluginext_contest_id,
         type: 'POST', dataType: 'json',
         data: { pe_contest_band:'', pe_contest_log_type:'Cabrillo' },
-        error: function() { console.log('ERROR: ajax updateCabrilloForm() function return error.'); },
+        error: function() { console.log('[Cloudlog][ERROR] ajax updateCabrilloForm() function return error.'); },
         success: function(res) {
-			//console.log(res);
+			if (pluginext_contest_log_debug) console.log(res);
 			var contest_station_id = res.log_content.contest_station_id;
 			var contest_year = res.log_content.contest_dateStart.substring(0,4);
 			var contest_cl_adif = res.log_content.contest_cl_adif;

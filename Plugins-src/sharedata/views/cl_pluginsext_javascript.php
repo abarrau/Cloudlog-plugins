@@ -1,4 +1,4 @@
-var sharedata_icon = "<div class='sharedata_onair' data-info='0' style='display:none;cursor:pointer;color:#FFFFFF;padding:2px 6px;'><i class='fas fa-rss'></i></div>";
+var sharedata_icon = "<a class='nav-link sharedata_onair' data-info='0' style='display:none;padding:2px 6px;'><i class='fas fa-rss'></i></a>"; //cursor:pointer;
 var sharedata_base_url= "<?php echo base_url();?>";
 var sharedata_user_id = "<?php echo $this->session->userdata('user_name'); ?>";
     
@@ -15,10 +15,10 @@ function sharedata_set_onair(_this) {
             error: function() { console.log('ERROR: ajax set_onair() function return error.'); },
             success: function(res) {
                 if (_this.attr('data-info')=='0') {
-                    _this.addClass('alert-warning');
+                    _this.addClass('btn btn-outline-danger');
                     _this.attr('data-info','1');
                 } else {
-                    _this.removeClass('alert-warning');
+                    _this.removeClass('btn btn-outline-danger');
                     _this.attr('data-info','0');
                 }
                 $('.sharedata_onair i').removeAttr('class').addClass('fas').addClass(res.onair_icon);
@@ -34,10 +34,10 @@ function sharedata_get_onair() {
             error: function() { console.log('ERROR: ajax get_onair() function return error.'); },
             success: function(res) {
                 if (res.onair_state==1) {
-                    $('.sharedata_onair').addClass('alert-warning');
+                    $('.sharedata_onair').addClass('btn btn-outline-danger');
                     if (res.onair_band!='') $('.sharedata_onair').attr('title',res.onair_band);
                 } else {
-                    $('.sharedata_onair').removeClass('alert-warning');
+                    $('.sharedata_onair').removeClass('btn btn-outline-danger');
                 }
                 $('.sharedata_onair').attr('data-info',res.onair_state);
                 $('.sharedata_onair i').removeClass('fa-rss').addClass(res.onair_icon);

@@ -29,7 +29,7 @@
     // ==== var and event ==== //
     // add pluginsext zone to main menu //
     var pluginsext_menu_zone = "<ul class=\"navbar-nav cl_pluginsext_menu\" style=\"display:none;\"><li class=\"nav-item dropdown\"><a class=\"nav-link dropdown-toggle\" href=\"#\" id=\"navbarDropdown\" role=\"button\" data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\"><i class=\"fas fa-cogs\"></i></a><div class=\"dropdown-menu cl_pluginsext_menu_list\" aria-labelledby=\"navbarDropdown\"></div></li></ul>";
-    pluginsext_menu_zone += "<div class=\"cl_pluginsext_info\"></div>";
+    pluginsext_menu_zone += "<ul class=\"navbar-nav cl_pluginsext_info\"></ul>";
     $('#navbarNav').append(pluginsext_menu_zone);
     // add pluginsext item to account item //
     var pluginsext_menu_account = "<a class=\"dropdown-item\" href=\"<?php echo site_url('pluginsext'); ?>\" title=\"External plugin\"><i class=\"fas fa-cog\"></i> External Plugins</a>";

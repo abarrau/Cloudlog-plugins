@@ -126,7 +126,7 @@
                         <div class="form-group col-sm-4">
                             <label for="pluginsdata_data__contest_score_conf_col"><?php echo $this->lang->line('contest_score_tab_col'); ?></label>
                             <?php 
-                                if (!isset($pluginsdata_data->contest_score_conf_col)) { $pluginsdata_data->contest_score_conf_col = ""; }
+                                if (!isset($pluginsdata_data->contest_score_conf_col)) { $pluginsdata_data->contest_score_conf_col = "BAND,QSO"; }
                                 $_aContest_score_conf_col = explode(",", $pluginsdata_data->contest_score_conf_col);
                                 $pluginsdata_data->contest_score_conf_col = ($pluginsdata_data->contest_score_conf_col=="")?$this->lang->line('contest_select_value'):$pluginsdata_data->contest_score_conf_col; 
                             ?>
@@ -138,7 +138,7 @@
                                 <?php foreach($list_score_tab_col as $_kcol => $_vcol) { 
                                     echo "<label for=\"".$_kcol."\">
                                             <input type=\"checkbox\" value=\"".$_kcol."\" ".((in_array($_kcol,$_aContest_score_conf_col)||($_vcol['c']===true))?"checked":"")." ".(($_vcol['c']===true)?"disabled":"")." /> 
-                                            ".$_kcol." | ".$_vcol['nf']." ".(($_vcol['t']=='i')?"(".$this->lang->line('contest_info').")":"")."</label> "; 
+                                            ".$_kcol." | ".$_vcol['nf']." ".(($_vcol['t']=='i')?"(".$this->lang->line('contest_tooltip').")":"")."</label> "; 
                                 } ?>
                             </div>
                         </div>

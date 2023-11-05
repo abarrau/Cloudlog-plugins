@@ -105,8 +105,9 @@
                 <label for="pluginsext_params__onair_show_band"><?php echo $this->lang->line('sharedata_onair_show_band'); ?></label>
                 <?php if (!isset($pluginsext_row->pluginsext_params->onair_show_band)) { $pluginsext_row->pluginsext_params->onair_show_band = 0; } ?>
                 <select class="custom-select" id="pluginsext_params__onair_show_band" name="pluginsext_params__onair_show_band">
-                    <option value="0" <?php if ($pluginsext_row->pluginsext_params->onair_show_band == 0) { echo " selected =\"selected\""; } ?>><?php echo $this->lang->line('general_word_no'); ?></option>
-                    <option value="1" <?php if ($pluginsext_row->pluginsext_params->onair_show_band == 1) { echo " selected =\"selected\""; } ?>><?php echo $this->lang->line('general_word_yes'); ?></option>
+                    <option value="0" <?php if ($pluginsext_row->pluginsext_params->onair_show_band == '0') { echo " selected =\"selected\""; } ?>><?php echo $this->lang->line('general_word_no'); ?></option>
+                    <option value="B" <?php if ($pluginsext_row->pluginsext_params->onair_show_band == 'B') { echo " selected =\"selected\""; } ?>><?php echo $this->lang->line('gen_hamradio_band'); ?></option>
+                    <option value="F" <?php if ($pluginsext_row->pluginsext_params->onair_show_band == 'F') { echo " selected =\"selected\""; } ?>><?php echo $this->lang->line('gen_hamradio_frequency'); ?></option>
                 </select>
             </div>  
             <div class="form-group col-sm-3">
@@ -123,7 +124,7 @@
         </div>
         <div class="form-group">
             <label><?php echo $this->lang->line('sharedata_url2use'); ?> : </label>
-            <label><?php echo base_url().$sharedata_url2use_onair; ?></label><br/>
+            <label><?php echo $sharedata_url2use_onair; ?></label><br/>
         </div>
         <div class="form-row" style="border-top:2px solid rgba(255, 255, 255, 0.075);">
             <div class="form-group col-sm-3">

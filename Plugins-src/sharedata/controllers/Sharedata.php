@@ -77,7 +77,6 @@ class CI_Sharedata extends Pluginsext_extands {
         } else {
             $onair_icon = $_data['pluginsext_row']->pluginsext_params->onair_showoff;
         }
-        if ($_data['pluginsext_row']->pluginsext_params->onair_show_band != 1) $onair_band = '';
         $_data['pe_json_return'] = array('onair_state'=>$onair_state,'onair_icon'=>'fa-'.$onair_icon);
         return $_data;
     }
@@ -85,7 +84,6 @@ class CI_Sharedata extends Pluginsext_extands {
     private function get_onair($_data) {
         $this->load->model('logbook_model');
         $onair_state = 0;
-        $onair_band = '';
         if (!isset($_data['_oUser'])) {
             $_data['_oUser'] = $this->user_model->get_by_id($this->session->userdata('user_id'))->row();
         }
@@ -94,27 +92,37 @@ class CI_Sharedata extends Pluginsext_extands {
             $onair_dateref = 0;
             if ($_data['pluginsext_row']->pluginsext_values->onair_date > strtotime($_data['sharedata_last_qso'][0]->COL_TIME_ON)) {
                 $onair_dateref = $_data['pluginsext_row']->pluginsext_values->onair_date;
-                $onair_band = '';
+                log_message('debug','[Pluginsext]['.get_called_class().'] C1:'.date('Y-m-d H:i:s',$_data['pluginsext_row']->pluginsext_values->onair_date).'>'.$_data['sharedata_last_qso'][0]->COL_TIME_ON);
             } else {
                 $onair_dateref = strtotime($_data['sharedata_last_qso'][0]->COL_TIME_ON);
-                $onair_band = ($_data['sharedata_last_qso'][0]->COL_SAT_NAME!='')?$_data['sharedata_last_qso'][0]->COL_SAT_NAME:$_data['sharedata_last_qso'][0]->COL_BAND;
+                log_message('debug','[Pluginsext]['.get_called_class().'] C2:'.date('Y-m-d H:i:s',$_data['pluginsext_row']->pluginsext_values->onair_date).'<'.$_data['sharedata_last_qso'][0]->COL_TIME_ON);
             }
             if (($onair_dateref+($_data['pluginsext_row']->pluginsext_params->onair_timeout*60)) >= date('U')) {
                 $_data['pluginsext_row']->pluginsext_values->onair_date = $onair_dateref;
                 $onair_state = 1;
+                log_message('debug','[Pluginsext]['.get_called_class().'] ON AIR: '.date('Y-m-d H:i:s',$onair_dateref+($_data['pluginsext_row']->pluginsext_params->onair_timeout*60)).'>='.date('Y-m-d H:i:s'));
             } else {
                 $_data['pluginsext_row']->pluginsext_values->onair_date = '';
-                $onair_band = '';
                 $onair_dateref = 0;
+                log_message('debug','[Pluginsext]['.get_called_class().'] NOT AIR ');
             }  
             $this->pluginsext_model->set_value($_data['pluginsext_row']->pluginsext_id, $_data['_oUser']->user_id, $_data['pluginsext_row']->pluginsext_values);
         }
         if ($onair_state==1) {
             $onair_icon = $_data['pluginsext_row']->pluginsext_params->onair_showon;
+            switch($_data['pluginsext_row']->pluginsext_params->onair_show_band) {
+                case "1":
+                case "B": $onair_band = ($_data['sharedata_last_qso'][0]->COL_SAT_NAME!='')?$_data['sharedata_last_qso'][0]->COL_SAT_NAME:$_data['sharedata_last_qso'][0]->COL_BAND;
+                    break;
+                case "F": $onair_band = $this->frequency->hz_to_mhz($_data['sharedata_last_qso'][0]->COL_FREQ);
+                    break;
+                default : $onair_band = '';
+            }
         } else {
             $onair_icon = $_data['pluginsext_row']->pluginsext_params->onair_showoff;
+            $onair_band = '';
         }
-        if ($_data['pluginsext_row']->pluginsext_params->onair_show_band != 1) $onair_band = '';
+
         $_data['pe_json_return'] = array('onair_state'=>$onair_state,'onair_band'=>$onair_band, 'onair_icon'=>'fa-'.$onair_icon);
         return $_data;
     }
