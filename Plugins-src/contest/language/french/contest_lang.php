@@ -34,6 +34,7 @@ $lang['contest_dup'] = 'Doublon';
 $lang['contest_best_distance'] = 'Meilleure distance';
 $lang['contest_info'] = 'Info';
 $lang['contest_tooltip'] = 'Info bulle';
+$lang['contest_qso_map'] = 'Ma carte des QSO';
 
 $lang['contest_score_tab_col'] = 'Données "en colonne"';
 $lang['contest_score_tab_row'] = 'Données "en ligne"';

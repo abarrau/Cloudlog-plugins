@@ -153,7 +153,7 @@
                             <label for="pluginsdata_data__contest_score_calcul_point_method"><?php echo $this->lang->line('contest_score_calcul_point_method'); ?></label>
                             <?php if (!isset($pluginsdata_data->contest_score_calcul_point_method)) { $pluginsdata_data->contest_score_calcul_point_method = ''; } ?>
                             <select class="custom-select" id="pluginsdata_data__contest_score_calcul_point_method" name="pluginsdata_data__contest_score_calcul_point_method">
-                                <option value="none" <?php echo (($pluginsdata_data->contest_score_calcul_point_method == "none")?"selected =\"selected\"":""); ?> >-</option>
+                                <option value="0" <?php echo (($pluginsdata_data->contest_score_calcul_point_method == "O")?"selected =\"selected\"":""); ?> >-</option>
                                 <?php foreach($list_score_calcul_point_method as $_krow => $_vrow) { echo "<option value=\"".$_krow."\" ".(($pluginsdata_data->contest_score_calcul_point_method == $_krow)?"selected =\"selected\"":"")." >".$_vrow['nf']."</option>"; } ?>
                             </select>
                         </div>                           

@@ -9,14 +9,14 @@
                     <?php for ($i=10;$i<=40;$i+=5) { echo '<option value="'.$i.'" '.(($pluginsext_row->pluginsext_params->nb_last_qso==$i)?"selected =\"selected\"":"").'>'.$i.'</option>'; } ?>
                 </select>
             </div>
-            <div class="form-group col-sm-3">
+            <!-- // Allways HIDE // <div class="form-group col-sm-3">
                 <label for="pluginsext_params__hide_contest_qso"><?php echo $this->lang->line('sharedata_hide_contest_qso'); ?></label>
                 <?php if (!isset($pluginsext_row->pluginsext_params->hide_contest_qso)) { $pluginsext_row->pluginsext_params->hide_contest_qso = 0; } ?>
                 <select class="custom-select" id="pluginsext_params__hide_contest_qso" name="pluginsext_params__hide_contest_qso">
                     <option value="0" <?php if ($pluginsext_row->pluginsext_params->hide_contest_qso == 0) { echo " selected =\"selected\""; } ?>><?php echo $this->lang->line('general_word_no'); ?></option>
                     <option value="1" <?php if ($pluginsext_row->pluginsext_params->hide_contest_qso == 1) { echo " selected =\"selected\""; } ?>><?php echo $this->lang->line('general_word_yes'); ?></option>
                 </select>
-            </div>  
+            </div>-->  
             <div class="form-group col-sm-3">
                 <label for="pluginsext_params__hide_ft8"><?php echo $this->lang->line('sharedata_hide_ft8'); ?></label>
                 <?php if (!isset($pluginsext_row->pluginsext_params->hide_ft8)) { $pluginsext_row->pluginsext_params->hide_ft8 = 0; } ?>

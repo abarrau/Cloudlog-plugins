@@ -12,6 +12,19 @@ function pluginsext_addcontexte2qso() {
 var pluginext_contest_log_debug = false;
 
 <?php if ($this->uri->segment(1) == "pluginsext" && $this->uri->segment(3) == "contest") { ?>
+</script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/moment.min.js"></script>
+<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/tempusdominus-bootstrap-4.min.js"></script>
+
+	<?php if ($this->uri->segment(1) == "pluginsext" && $this->uri->segment(3) == "contest" && $this->uri->segment(4) == "statistiques") { ?>
+	<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/highstock.js"></script>
+	<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/highstock/exporting.js"></script>
+	<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/highstock/offline-exporting.js"></script>
+	<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/highstock/export-data.js"></script>
+	<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/leaflet/L.Maidenhead.js"></script>
+	<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/leaflet/leafembed.js" id="leafembed" tileUrl="<?php echo $this->optionslib->get_option('option_map_tile_server');?>"></script>
+	<?php } ?>
+<script>
 
 var pluginext_location = window.location.pathname;
 var pluginext_contest_select_value = "<?php echo $this->lang->line('contest_select_value'); ?>";
@@ -19,6 +32,9 @@ var pluginext_contest_base_url = "<?php echo base_url(); ?>";
 var pluginext_contest_stateqso = <?php echo isset($pluginsext_contest_icon_stateqso)?json_encode($pluginsext_contest_icon_stateqso):"{}"; ?>;
 var pluginext_contest_log_type = "<?php echo (isset($pluginsdata_data->contest_log_type))?$pluginsdata_data->contest_log_type:""; ?>";
 var pluginext_contest_url_cabrillo = pluginext_contest_base_url+'index.php/cabrillo';
+var q_lat = q_lng = q_zoom = 0;
+var qso_loc = '';
+
 
 // === FUNCTIONS ==========
 // calcul pts of all qso //
@@ -396,6 +412,17 @@ function contest_cqww_score_from_cq_api() { // TODO //
         //success: function(res) {console.log(res); }
     }).responseText;*/
 }
+//
+var qso_loc;
+function contest_set_map() {
+    q_lat = 27; q_lng = 0; q_zoom = 2;
+	_pe_contest_id = $('input[name=pluginsdata_id]').attr('value');
+    greenIcon = L.divIcon({className:'cplotmap fas fa-dot-circle green'});
+    grayIcon = L.divIcon({className:'cplotmap fas fa-dot-circle gray'});
+    orangeIcon = L.divIcon({className:'cplotmap fas fa-dot-circle orange'});
+	qso_loc = pluginext_contest_base_url+'index.php/pluginsext/ws/contest/ws_getqsolocformap/'+_pe_contest_id;
+    initmap('no','contest_qsomap',{'url_qso':qso_loc});
+}
 
 //---------------------------------------------------
 //function 
@@ -471,23 +498,12 @@ if (pluginext_location.indexOf("/menu/contest/statistiques")>0) {
 	    contest_plotTimeplotterChart(JSON.parse($('#pe_contest_timeplotter_data').html()),'pe_contest_timeplotter_view');
 	    contest_getgetstatarray();
 	    if ($('.contest_score_by_category').length>0) { $('.contest_not_result_yet').hide(); } else { contest_elapse_zone($('.contest_not_result_yet').closest('.card-body').prev('.card-header').find('.contest_elapse_zone')); }
-	    if ($('.contest_cqww_info').length>0) { contest_cqww_score_from_cq_api(); }
+	    contest_set_map();
+	   	if ($('.contest_cqww_info').length>0) { contest_cqww_score_from_cq_api(); }
 	});
 	$('.contest_elapse_zone').off('click').on('click',function() { contest_elapse_zone($(this)); });
 
 }
-
-</script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/moment.min.js"></script>
-<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/tempusdominus-bootstrap-4.min.js"></script>
-
-	<?php if ($this->uri->segment(1) == "pluginsext" && $this->uri->segment(3) == "contest" && $this->uri->segment(4) == "statistiques") { ?>
-	<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/highstock.js"></script>
-	<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/highstock/exporting.js"></script>
-	<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/highstock/offline-exporting.js"></script>
-	<script type="text/javascript" src="<?php echo base_url(); ?>assets/js/highstock/export-data.js"></script>
-	<?php } ?>
-<script>
 
 <?php } ?>
 

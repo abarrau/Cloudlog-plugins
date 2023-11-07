@@ -56,11 +56,16 @@ class CI_Contest_score_method {
     //=====================================================================================================================================================================
     //
     function contest_get_method_info($_adif,$_arg,$_comp=null) {
+log_message('debug','_adif='.$_adif);
         if (isset($this->contest_list_method[$_adif])) { 
+log_message('debug','_adif EXIST');
             if (($_arg=="m")&&(!is_null($_comp))) { return $this->contest_list_method[$_adif][$_arg]."_".$_comp; } else { return $this->contest_list_method[$_adif][$_arg]; };
+        } else {
+            foreach($this->contest_list_method as $k => $method) { 
+                if (in_array($_adif,$method['adif'])) {  if (($_arg=="m")&&(!is_null($_comp))) { return $method[$_arg]."_".$_comp; } else { return $method[$_arg]; } }
+            }
         }
-        foreach($this->contest_list_method as $k => $method) { 
-            if (in_array($_adif,$method['adif'])) {  if (($_arg=="m")&&(!is_null($_comp))) { return $method[$_arg]."_".$_comp; } else { return $method[$_arg]; } }
-        }
+log_message('debug','return false');
+        return false;
     }
 }

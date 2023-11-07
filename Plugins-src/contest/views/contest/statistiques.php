@@ -114,12 +114,21 @@
 <div class="form-row" style="margin-top:15px;">
     <div class="card col-md-12" style="padding:0px!important;">
     	<div class="card-header contest_titlezone"><i class="fas fa-hourglass-half"></i>&nbsp;&nbsp;<?php echo $this->lang->line('contest_stat_bytime')." (".$pluginsext_row->pluginsext_params->contest_period_timeplotter."mins)"; ?><span class="contest_elapse_zone float-right"><i class="fas fa-caret-down"></i></span></div>
-        <div class="card-body">
+        <div class="card-body" style="padding:5px!important;">
             <div class="form-row">
             	<div id="pe_contest_timeplotter_view" class="col-sm-12"></div>
             	<div id="pe_contest_timeplotter_data" style="display:none;"><?php echo $pluginsdata_data["contest_timeplotter"]; ?></div>
             </div>
     	</div>
+    </div>
+</div>
+
+<div class="form-row" style="margin-top:15px;">
+    <div class="card col-md-12" style="padding:0px!important;">
+        <div class="card-header contest_titlezone"><i class="fas fa-hourglass-half"></i>&nbsp;&nbsp;<?php echo $this->lang->line('contest_qso_map'); ?><span class="contest_elapse_zone float-right"><i class="fas fa-caret-down"></i></span></div>
+        <div class="card-body" style="padding:5px!important;">
+            <div id="contest_qsomap" style="width:100%;height:500px;"></div>
+        </div>
     </div>
 </div>
 

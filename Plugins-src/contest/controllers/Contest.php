@@ -76,12 +76,9 @@ class CI_Contest extends Pluginsext_extands {
 				$_oContest = $this->Contesting_model->contest($_pluginsdata_data['contest_cl_id']);
 				$_pluginsdata_data['contest_cl_n'] = (isset($_oContest->name))?$_oContest->name:'';
                 $_pluginsdata_data['contest_cl_adif'] = (isset($_oContest->adifname))?$_oContest->adifname:'';
-				//$_pluginsdata_data['contest_dhStart'] = $_pluginsdata_data['contest_dateStart'].' '.$_pluginsdata_data['contest_hourStart'];
-				//$_pluginsdata_data['contest_dhEnd'] = $_pluginsdata_data['contest_dateEnd'].' '.$_pluginsdata_data['contest_hourEnd'];
                 if (($_now >= strtotime($_pluginsdata_data['contest_dhStart'])) && ($_now < strtotime($_pluginsdata_data['contest_dhEnd']))) { $_pluginsdata_data['contest_inprogress'] = true; }
 				$list_qso = $this->model_list_qso(array('pluginsdata_data'=>$_pluginsdata_data));
 				$_pluginsdata_data['contest_qso_nb'] = count($list_qso->result());
-                //$_pluginsdata_data['contest_qso_nbv'] = count($this->model_list_qso($_data, true)->result()); //$_data['pluginsext_row']->pluginsext_params->bddcoluserdef_namecontest,
 				$_data['contest_list'][] = $_pluginsdata_data;
 			} else {
                 $_pluginsdata_data['pluginsdata_id'] = $row->pluginsdata_id;
@@ -108,7 +105,7 @@ class CI_Contest extends Pluginsext_extands {
         $this->form_validation->set_rules('pluginsdata_data__contest_bands', '"'.$this->lang->line('contest_bands').'"', 'required');
         if ($this->form_validation->run() !== FALSE) {
             $_oStation = $this->Stations->profile($_post['pluginsdata_data__contest_station_id'])->row();
-            $_post['pluginsdata_data__contest_my_cont'] = $this->model_get_dxcc_info($_oStation->station_dxcc,'cont');
+            $_post['pluginsdata_data__contest_my_cont'] = $this->PE_Contest_model->get_dxcc_info($_oStation->station_dxcc,'cont');
             $_post['pluginsdata_data__contest_my_dxcc'] = $_oStation->station_dxcc;
             $_oContest = $this->Contesting_model->contest($_post['pluginsdata_data__contest_cl_id']);
             $_post['pluginsdata_data__contest_cl_adif'] = $_oContest->adifname;
@@ -244,48 +241,6 @@ class CI_Contest extends Pluginsext_extands {
         return $_data;
     }
 
-    // Set distance on Logbook field //
-    /* public function ws_setdistance($_data) {
-        $_data['_for_do']['COL_PRIMARY_KEY'] = str_replace('"', "", $this->input->post("pe_contest_qsoid"));
-        $_data['_for_do']['isallupdate'] = (str_replace('"', "", $this->input->post("pe_contest_all_update"))=="true")?true:false;
-        $_data['_for_do']['isallupdate'] = ($_data['_for_do']['COL_PRIMARY_KEY']>0)?false:$_data['_for_do']['isallupdate'];
-        $_msg = ""; 
-        if ($_data['methode_args']['arg1'] > 0) {
-            $_nbupdate = 0;
-            $pluginsdata_row = $this->pluginsext_model->get_data_by_id($_data['methode_args']['arg1'])->row();
-            $_data['pluginsdata_data'] = json_decode($pluginsdata_row->pluginsdata_data,true);
-            $_oStation = $this->Stations->profile($_data['pluginsdata_data']['contest_station_id'])->row();
-            $_data['pluginsdata_data']['contest_station_gridsquare'] = $_oStation->station_gridsquare;
-            $_data['_for_do']['measurement_base'] = ($this->session->userdata('user_measurement_base') == NULL)?$this->config->item('measurement_base'):$this->session->userdata('user_measurement_base');
-            if (($_data['_for_do']['isallupdate']==false) && ($_data['_for_do']['COL_PRIMARY_KEY'] > 0)) {
-                // TODO //
-                //contest_qso_id
-            } else if ($_data['_for_do']['isallupdate']==true) {
-                //$_bddcoluserdef_namecontest = $_data['pluginsext_row']->pluginsext_params->bddcoluserdef_namecontest;
-                $list_qso = $this->model_list_qso($_data, true); //$_bddcoluserdef_namecontest, //$this->user_model->get_by_id($this->session->userdata('user_id'))->row(), 
-                foreach ($list_qso->result() as $row) {
-                    if ((strlen($row->COL_GRIDSQUARE)==4)||(strlen($row->COL_GRIDSQUARE)==6)) {
-                        $_data['_for_do']['gridsquare2'] = $row->COL_GRIDSQUARE;
-                        $_data['_for_do']['COL_PRIMARY_KEY'] = $row->COL_PRIMARY_KEY;
-                        $this->set_distance($_data);
-                        $_nbupdate++;                        
-                    }
-                }
-                $_data['pe_json_return'] = array('nbupdate'=>$_nbupdate, 'd'=>$_data);
-                return $_data;                
-            } else $_msg = "not info for update type";
-        } else $_msg = "not contest id";
-        $_data['pe_json_return'] = array('pe_stat'=>'KO','pe_msg'=>'ERROR: on this method : '.$_data['methode_name'].' ('.$_msg.')', 'd'=>$_data);
-        return $_data;        
-    }*/
-
-    // Set distance //
-    /*public function set_distance($_data) {
-        $this->load->model('Distances_model');
-        $_data['_for_do']['COL_DISTANCE'] = $this->Distances_model->bearing_dist($_data['pluginsdata_data']['contest_station_gridsquare'], $_data['_for_do']['gridsquare2'], $_data['_for_do']['measurement_base']);
-        $this->model_set_distance($_data);
-    }*/
-
     // Set contest name on COL_USER_DEFINED_x field //
     /* public function ws_setqsostate($_data) {
         $_data['_for_do']['COL_PRIMARY_KEY'] = str_replace('"', "", $this->input->post("pe_contest_qsoid"));
@@ -305,7 +260,7 @@ class CI_Contest extends Pluginsext_extands {
                         $_data['_for_do']['COL_USER_DEFINED_value'] = ($_data['_for_do']['qsostate']=='v')?$_data['pluginsdata_data']['contest_name']:"";
                         $_data['pluginsdata_data']['contest_dhStart'] = $_data['pluginsdata_data']['contest_dateStart']." ".$_data['pluginsdata_data']['contest_hourStart'].":00";
                         $_data['pluginsdata_data']['contest_dhEnd'] = $_data['pluginsdata_data']['contest_dateEnd']." ".$this->define_second_end_hour($_data['pluginsdata_data']['contest_hourEnd']);                            
-                        $this->model_set_contest_set_userdefined($_data);
+                        $this->PE_Contest_model->set_contest_set_userdefined($_data);
                         //$_qso_nbv = count($this->model_list_qso($_data['pluginsdata_data'], true)->result()); //$_data['pluginsext_row']->pluginsext_params->bddcoluserdef_namecontest,  //$this->user_model->get_by_id($this->session->userdata('user_id'))->row(),
                         $_data['pe_json_return'] = array('icon_info'=>$this->contest_icon_stateqso[$_data['_for_do']['qsostate']],'qso_nbv'=>$_qso_nbv, 'd'=>$_data);
                         return $_data;
@@ -316,6 +271,43 @@ class CI_Contest extends Pluginsext_extands {
         $_data['pe_json_return'] = array('pe_stat'=>'KO','pe_msg'=>'ERROR: on this method : '.$_data['methode_name'].' ('.$_msg.')');
         return $_data;        
     }*/
+
+    //
+    public function ws_getqsolocformap($_data) {
+        $_data['_tmp']['pe_contest_id'] = isset($_data['methode_args']['arg1'])?$_data['methode_args']['arg1']:0;
+
+        if ($_data['_tmp']['pe_contest_id']) { $_data['pluginsext_row']->pluginsdata_id = $_data['_tmp']['pe_contest_id']; }
+            else { $_data['pluginsext_row']->pluginsdata_id = 0; }
+
+        if ($_data['pluginsext_row']->pluginsdata_id >0) {
+        	$this->load->library('qra');
+            $pluginsdata_row = $this->pluginsext_model->get_data_by_id($_data['pluginsext_row']->pluginsdata_id)->row();
+            $_data['pluginsdata_data'] = json_decode($pluginsdata_row->pluginsdata_data,true);
+            $_data['pluginsdata_data']['measurement_base'] = ($this->session->userdata('user_measurement_base') == NULL)?$this->config->item('measurement_base'):$this->session->userdata('user_measurement_base');
+            $_data['pluginsdata_data']['measurement_base'] = $this->contest_measurement[$_data['pluginsdata_data']['measurement_base']];
+            $list_qso = $this->model_list_qso($_data); //, $_bddcoluserdef_namecontest);
+            $_jsonresult['markers'] = array();
+            list($_lat, $_lng) = array(0,0);
+            foreach ($list_qso->result() as $row) {
+            	$_icon = ($row->COL_EQSL_QSL_RCVD=='Y')?'greenIcon':(($row->COL_LOTW_QSL_RCVD=='Y')?'greenIcon':(($row->COL_QSL_RCVD=='Y')?'greenIcon':'redIcon'));
+            	if (!empty($row->COL_GRIDSQUARE)) { list($_lat, $_lng) = $this->qra->qra2latlong($row->COL_GRIDSQUARE); }
+            		//else if (!empty($row->COL_VUCC_GRIDS)) { list($_lat, $_lng) = $this->qra->qra2latlong($row->COL_VUCC_GRIDS); }
+            		else { list($_lat, $_lng) = array($row->COL_DXCC_LAT, $row->COL_DXCC_LONG); if ($_icon=='redIcon') { $_icon='orangeIcon'; } }
+            	$_jsonresult['markers'][] = array('lat'=>$_lat,'lng'=>$_lng,'html'=>$row->COL_DISTANCE.' '.$_data['pluginsdata_data']['measurement_base'],'label'=>'','icon'=>$_icon);
+            }
+            $_oStation = $this->Stations->profile($_data['pluginsdata_data']['contest_station_id'])->row();
+            list($_lat, $_lng) = array(0,0);
+            if (!empty($_oStation->station_gridsquare)) { list($_lat, $_lng) = $this->qra->qra2latlong($_oStation->station_gridsquare); }
+            if (($_lat!=0)&&($_lng!=0)) { $_jsonresult['home'] = array('show'=>true,'lat'=>$_lat,'lng'=>$_lng,'html'=>'<b>'.$_oStation->station_profile_name.'</b><br/>'.$_oStation->station_gridsquare,'label'=>'','icon'=>'homeIcon'); }
+			header('Content-Type: application/json');
+            echo json_encode($_jsonresult);
+            die();
+            //$_data['pe_json_return'] = $_jsonresult;
+            //return $_data;
+        } else $_msg = "not contest id";
+        $_data['pe_json_return'] = array('pe_stat'=>'KO','pe_msg'=>'ERROR: on this method : '.$_data['methode_name'].' ('.$_msg.')', 'd'=>$_data);
+        return $_data;    
+    }
 
     // --- STATISTIQUES -------------------------------------------------------------- //
     // Function show statistiques about contest //
@@ -366,21 +358,21 @@ class CI_Contest extends Pluginsext_extands {
                 $_data['list_qso'][] = $row; // used for timeplotter //
             }
         	$this->load->model('Timeplotter_model');
-        	$_data['pluginsdata_data']['contest_timeplotter'] = json_encode($this->model_set_timeplotter($_data));
+        	$_data['pluginsdata_data']['contest_timeplotter'] = json_encode($this->PE_Contest_model->get_timeplotter($_data));
 
             // Global infos //
             $_data['pluginsdata_data']['list_info'] = array('qso_nb'=>0,'qso_valid'=>0,'dxcc'=>0,'dxcc_new_list'=>array(),'cqz'=>0,'cqz_new_list'=>array(),'best_dist_row'=>array()); //'qso_nbv'=>0, 
             $_data['pluginsdata_data']['list_info']['qso_nb'] = count($_data['list_qso']);
-            $_data['pluginsdata_data']['list_info']['qso_valid'] = $this->model_get_stat_info($_data['pluginsdata_data'], "QSO_VALID")->row()->NB; // $_data['pluginsext_row']->pluginsext_params->bddcoluserdef_namecontest,
-            $_data['pluginsdata_data']['list_info']['dxcc'] = $this->model_get_stat_info($_data['pluginsdata_data'], "DXCC")->row()->NB; // $_data['pluginsext_row']->pluginsext_params->bddcoluserdef_namecontest,
-            $_data['pluginsdata_data']['list_info']['cqz'] = $this->model_get_stat_info($_data['pluginsdata_data'], "CQZ")->row()->NB; //$_data['pluginsext_row']->pluginsext_params->bddcoluserdef_namecontest,
-            $_data['pluginsdata_data']['list_info']['dxcc_new_list'] = $this->model_get_stat_info($_data['pluginsdata_data'], "DXCC_NEW")->result(); //$_data['pluginsext_row']->pluginsext_params->bddcoluserdef_namecontest,
-            $_data['pluginsdata_data']['list_info']['cqz_new_list'] = $this->model_get_stat_info($_data['pluginsdata_data'], "CQZ_NEW")->result(); //$_data['pluginsext_row']->pluginsext_params->bddcoluserdef_namecontest,
-            $_data['pluginsdata_data']['list_info']['best_dist_row'] = $this->model_get_stat_info($_data['pluginsdata_data'], "BEST_DIST")->row(); //$_data['pluginsext_row']->pluginsext_params->bddcoluserdef_namecontest,
+            $_data['pluginsdata_data']['list_info']['qso_valid'] = $this->PE_Contest_model->get_stat_info($_data['pluginsdata_data'], "QSO_VALID")->row()->NB; // $_data['pluginsext_row']->pluginsext_params->bddcoluserdef_namecontest,
+            $_data['pluginsdata_data']['list_info']['dxcc'] = $this->PE_Contest_model->get_stat_info($_data['pluginsdata_data'], "DXCC")->row()->NB; // $_data['pluginsext_row']->pluginsext_params->bddcoluserdef_namecontest,
+            $_data['pluginsdata_data']['list_info']['cqz'] = $this->PE_Contest_model->get_stat_info($_data['pluginsdata_data'], "CQZ")->row()->NB; //$_data['pluginsext_row']->pluginsext_params->bddcoluserdef_namecontest,
+            $_data['pluginsdata_data']['list_info']['dxcc_new_list'] = $this->PE_Contest_model->get_stat_info($_data['pluginsdata_data'], "DXCC_NEW")->result(); //$_data['pluginsext_row']->pluginsext_params->bddcoluserdef_namecontest,
+            $_data['pluginsdata_data']['list_info']['cqz_new_list'] = $this->PE_Contest_model->get_stat_info($_data['pluginsdata_data'], "CQZ_NEW")->result(); //$_data['pluginsext_row']->pluginsext_params->bddcoluserdef_namecontest,
+            $_data['pluginsdata_data']['list_info']['best_dist_row'] = $this->PE_Contest_model->get_stat_info($_data['pluginsdata_data'], "BEST_DIST")->row(); //$_data['pluginsext_row']->pluginsext_params->bddcoluserdef_namecontest,
 
             $_data = $this->score_array($_data);
             // DUP LIST //
-            $_data['score']['list_dup'] = $_result = $this->model_get_stat_info_by_band($_data, "DUP_LIST")->result();
+            $_data['score']['list_dup'] = $_result = $this->PE_Contest_model->get_stat_info_by_band($_data, "DUP_LIST")->result();
 
         } else {
             // TODO ERROR
@@ -388,7 +380,7 @@ class CI_Contest extends Pluginsext_extands {
         return $_data;
     }
 
-   // Function show statistiques about contest //
+    // Function show statistiques about contest //
     public function score_array($_data) {
         $this->load->model('Contesting_model');
         $this->load->model('bands');
@@ -414,7 +406,7 @@ class CI_Contest extends Pluginsext_extands {
         // score by type //
         foreach($_data['score']['title'] as $_col) { $_data = $this->set_score_switch($_data, $_col); }
         // final score //
-        if ($_data['pluginsdata_data']['contest_score_calcul_point_method']!="none") {
+        if ($_data['pluginsdata_data']['contest_score_calcul_point_method']!=("0"||"none")) {
             $_cScore_method =& load_class('Contest_score_method', $this->config->item('pluginsext_path').'/contest/controllers');
             $contest_method = $_cScore_method->contest_get_method_info($_data['pluginsdata_data']['contest_score_calcul_point_method'],"m","sum");
             $_data['score']['final'] = $_cScore_method->$contest_method($_data);
@@ -436,7 +428,7 @@ class CI_Contest extends Pluginsext_extands {
             case "QSO": 
             case "PTS":
             case "PTS_Q":
-                $_result = $this->model_get_stat_info_by_band($_data, $_col, $_filter);
+                $_result = $this->PE_Contest_model->get_stat_info_by_band($_data, $_col, $_filter);
                 foreach ($_result->result() as $row) { $_data['score']['result'][$row->COL_BAND][$_col] = ($_col=="PTS_Q")?round($row->NB,1):$row->NB; }
                 break;
             case "DPT":
@@ -446,19 +438,23 @@ class CI_Contest extends Pluginsext_extands {
     }
     //
     public function set_score_point_by_qso($_data, $_forceupdate=false) {
-        $_cScore_method =& load_class('Contest_score_method', $this->config->item('pluginsext_path').'/contest/controllers');
-        $contest_method = $_cScore_method->contest_get_method_info($_data['pluginsdata_data']['contest_score_calcul_point_method'],"m","qsopts");
-        $_bddcoluserdef_pts = $_data['pluginsext_row']->pluginsext_params->bddcoluserdef_pts;
-        $list_qso = $this->model_list_qso($_data);
-        $_data['_tmp']['COL_USER_DEFINED_name'] = $_data['pluginsext_row']->pluginsext_params->bddcoluserdef_pts;
         $_return = 0;
-        foreach ($list_qso->result() as $row) {
-            if (empty($row->$_bddcoluserdef_pts) || is_null($row->$_bddcoluserdef_pts) || $_forceupdate) {
-                $_tmpDup = $this->model_get_stat_info($_data['pluginsdata_data'], "CALL_IS_DUP", array('qso'=>$row))->row();
-                $_data['_tmp']['COL_USER_DEFINED_value'] = $row->$_bddcoluserdef_pts = (isset($_tmpDup->CALL_EXIST))?"D":$_cScore_method->$contest_method($_data, $row);
-                $_data['_tmp']['COL_PRIMARY_KEY'] = $row->COL_PRIMARY_KEY;
-                $this->model_set_contest_set_userdefined($_data);
-                $_return++;
+        if ($_data['pluginsdata_data']['contest_score_calcul_point_method']!=("0"||"none")) {
+            $_cScore_method =& load_class('Contest_score_method', $this->config->item('pluginsext_path').'/contest/controllers');
+            $contest_method = $_cScore_method->contest_get_method_info($_data['pluginsdata_data']['contest_score_calcul_point_method'],"m","qsopts");
+            if (!empt($contest_method)||($contest_method!==false)) {
+                $_bddcoluserdef_pts = $_data['pluginsext_row']->pluginsext_params->bddcoluserdef_pts;
+                $list_qso = $this->model_list_qso($_data);
+                $_data['_tmp']['COL_USER_DEFINED_name'] = $_data['pluginsext_row']->pluginsext_params->bddcoluserdef_pts;
+                foreach ($list_qso->result() as $row) {
+                    if (empty($row->$_bddcoluserdef_pts) || is_null($row->$_bddcoluserdef_pts) || $_forceupdate) {
+                        $_tmpDup = $this->PE_Contest_model->get_stat_info($_data['pluginsdata_data'], "CALL_IS_DUP", array('qso'=>$row))->row();
+                        $_data['_tmp']['COL_USER_DEFINED_value'] = $row->$_bddcoluserdef_pts = (isset($_tmpDup->CALL_EXIST))?"D":$_cScore_method->$contest_method($_data, $row);
+                        $_data['_tmp']['COL_PRIMARY_KEY'] = $row->COL_PRIMARY_KEY;
+                        $this->PE_Contest_model->set_contest_set_userdefined($_data);
+                        $_return++;
+                    }
+                }
             }
         }
         return $_return;
@@ -477,7 +473,7 @@ class CI_Contest extends Pluginsext_extands {
             $_data = $this->score_array($_data);
             $_data['pe_json_return'] = array('pe_stat'=>'OK','d'=>$_data);
             return $_data;
-        } else $_msg = "not filter station id";
+        } else $_msg = "not contest id";
         $_data['pe_json_return'] = array('pe_stat'=>'KO','pe_msg'=>'ERROR: on this method : '.$_data['methode_name'].' ('.$_msg.')', 'd'=>$_data);
         return $_data;    
     }
@@ -519,8 +515,6 @@ class CI_Contest extends Pluginsext_extands {
             $_data['pluginsdata_data']['contest_cl_n'] = (isset($_oContest->name))?$_oContest->name:'';
             $_data['pluginsdata_data']['contest_cl_adif'] = (isset($_oContest->adifname))?$_oContest->adifname:'';
             $_oUser = $this->user_model->get_by_id($this->session->userdata('user_id'))->row();
-            //$_data['pluginsdata_data']['contest_dhStart'] = $_data['pluginsdata_data']['contest_dateStart']." ".$_data['pluginsdata_data']['contest_hourStart'].":00";
-            //$_data['pluginsdata_data']['contest_dhEnd'] = $_data['pluginsdata_data']['contest_dateEnd']." ".$this->define_second_end_hour($_data['pluginsdata_data']['contest_hourEnd']);
             $_oStation = $this->Stations->profile($_data['pluginsdata_data']['contest_station_id'])->row();
             $_data['pluginsdata_data']['contest_station'] = $_oStation->station_profile_name."&nbsp;&nbsp;:&nbsp;&nbsp;".$_oStation->station_gridsquare."&nbsp;&nbsp;-&nbsp;&nbsp;".$_oStation->station_city;
             $_data['pluginsdata_data']['list_band'] = array();
@@ -687,26 +681,12 @@ class CI_Contest extends Pluginsext_extands {
 
     // --- MODEL -------------------------------------------------------------- //
     //
-    private function model_set_contest_set_userdefined($_data) {
-        $fieldsupdate = array(
-            $_data['_tmp']['COL_USER_DEFINED_name'] => xss_clean($_data['_tmp']['COL_USER_DEFINED_value'])
-        );
-        $this->CI->db->where('station_id', xss_clean($_data['pluginsdata_data']['contest_station_id']));
-        $this->CI->db->where('COL_CONTEST_ID', xss_clean($_data['pluginsdata_data']['contest_cl_adif']));
-        if (isset($_data['_tmp']['isallupdate']) && ($_data['_tmp']['isallupdate']==true)) {
-            $this->CI->db->where(" (COL_TIME_ON >= '".xss_clean($_data['pluginsdata_data']['contest_dhStart'])."' AND COL_TIME_OFF <= '".xss_clean($_data['pluginsdata_data']['contest_dhEnd'])."') ");
-            $this->CI->db->where_in('COL_BAND', explode(",",xss_clean($_data['pluginsdata_data']['contest_bands'])));
-        } else {
-            $this->CI->db->where('COL_PRIMARY_KEY', xss_clean($_data['_tmp']['COL_PRIMARY_KEY']));
-        }
-        $this->CI->db->update($this->CI->config->item('table_name'), $fieldsupdate);
-    }
-    //
     private function model_list_qso($_data) { // $_filter=false, $_orderbytime="asc", $_bddcoluserdef_namecontest="",
         if (!isset($_data['_tmp']['_orderbytime'])) { $_data['_tmp']['_orderbytime'] = "ASC"; }
         if (isset($_data['pluginsext_row']->pluginsext_params->bddcoluserdef_pts)) { $_bddcoluserdef_pts = ",".$_data['pluginsext_row']->pluginsext_params->bddcoluserdef_pts; } else { $_bddcoluserdef_pts = ""; }
         //$_bddcoluserdef_namecontest_tmp = (!empty($_bddcoluserdef_namecontest))?(", ".$_bddcoluserdef_namecontest):"";
-        $this->CI->db->select('COL_PRIMARY_KEY, COL_CALL, COL_BAND, COL_TIME_ON, COL_RST_RCVD, COL_RST_SENT, COL_MODE, COL_SUBMODE, COL_SRX_STRING, COL_SRX, COL_STX_STRING, COL_STX, COL_GRIDSQUARE, COL_CONT, COL_DXCC, COL_DISTANCE'.$_bddcoluserdef_pts); //.$_bddcoluserdef_namecontest_tmp);
+        $this->CI->db->select('COL_PRIMARY_KEY, COL_CALL, COL_BAND, COL_TIME_ON, COL_RST_RCVD, COL_RST_SENT, COL_MODE, COL_SUBMODE, COL_SRX_STRING, COL_SRX, COL_STX_STRING, COL_STX, COL_GRIDSQUARE, COL_CONT, COL_DXCC, COL_DISTANCE, COL_EQSL_QSL_RCVD, COL_LOTW_QSL_RCVD, COL_QSL_RCVD, dxcc_entities.lat AS COL_DXCC_LAT, dxcc_entities.long AS COL_DXCC_LONG, '.$_bddcoluserdef_pts); //.$_bddcoluserdef_namecontest_tmp);
+        $this->CI->db->join('dxcc_entities', $this->config->item('table_name').'.col_dxcc = dxcc_entities.adif', 'left');
         //if ($_filter && !empty($_bddcoluserdef_namecontest)) { $this->CI->db->where($_bddcoluserdef_namecontest, xss_clean($_data['pluginsdata_data']['contest_name'])); }
         $this->CI->db->where('station_id', xss_clean($_data['pluginsdata_data']['contest_station_id']));
         $this->CI->db->where('COL_CONTEST_ID', xss_clean($_data['pluginsdata_data']['contest_cl_adif']));
@@ -719,162 +699,5 @@ class CI_Contest extends Pluginsext_extands {
         }
         return $this->CI->db->get($this->CI->config->item('table_name'));
     }
-    //
-    /*private function model_set_distance($_data) {
-        $fieldsupdate = array(
-            'COL_DISTANCE' => xss_clean($_data['_for_do']['COL_DISTANCE'])
-        );
-        $this->CI->db->where('station_id', xss_clean($_data['pluginsdata_data']['contest_station_id']));
-        $this->CI->db->where('COL_PRIMARY_KEY', xss_clean($_data['_for_do']['COL_PRIMARY_KEY']));
-        $this->CI->db->update($this->CI->config->item('table_name'), $fieldsupdate);
-    }*/
-    //
-    private function model_set_timeplotter($_data) {
-        $tEnd = strtotime($_data['pluginsdata_data']['contest_dhEnd']);
-        $tStart_c = strtotime($_data['pluginsdata_data']['contest_dhStart']);
-        $_data_bands = array();
-		$contest_stat_range = $_data['pluginsext_row']->pluginsext_params->contest_period_timeplotter;
 
-        while ($tStart_c <= $tEnd) {
-            $_data_times[date("U",$tStart_c)] = array('total'=>'0', 'bands'=>array(), 'label_time'=>(((strtotime($_data['pluginsdata_data']['contest_dhStart'])==$tStart_c)||(date("Hi",$tStart_c)=="0000"))?(date("Y-m-d H:i",$tStart_c).'z'):(date("H:i",$tStart_c).'z')) );
-            $tStart_c = strtotime("+".$contest_stat_range." minutes",$tStart_c);
-        }
-        foreach ($_data['list_qso'] as $row) {
-            $_data_times[$row->contest_dateRange]['total']++;
-            if (!isset($_data_times[$row->contest_dateRange]['bands'][$row->COL_BAND])) { $_data_times[$row->contest_dateRange]['bands'][$row->COL_BAND]=0; }
-            $_data_times[$row->contest_dateRange]['bands'][$row->COL_BAND]++;
-            if (!in_array($row->COL_BAND, $_data_bands)) { $_data_bands[] = $row->COL_BAND; }
-        }
-        return array('data_times'=>$_data_times, 'data_bands'=>$_data_bands);
-    }
-    // 
-    private function model_get_stat_info($_pluginsdata_data,$_what="",$_filter=array()) { // $_bddcoluserdef_namecontest,
-        //if (!isset($_data['pluginsdata_data']['contest_dhStart']) || !isset($_data['pluginsdata_data']['contest_dhEnd'])){
-        //    $_pluginsdata_data['contest_dhStart'] = $_pluginsdata_data['contest_dateStart'].' '.$_pluginsdata_data['contest_hourStart'].':00';
-        //    $_pluginsdata_data['contest_dhEnd'] = $_pluginsdata_data['contest_dateEnd'].' '.$this->define_second_end_hour($_pluginsdata_data['contest_hourEnd']);
-        //}
-        switch($_what) {
-            case "CQZ":
-                $this->CI->db->select('count(DISTINCT `COL_CQZ`) as `NB`');
-                break;
-            case "DXCC":
-                $this->CI->db->select('count(DISTINCT `COL_DXCC`) AS `NB`');
-                break;
-            case "BEST_DIST":
-                $this->CI->db->select('COL_CALL, COL_DISTANCE, COL_PRIMARY_KEY');
-                $this->CI->db->limit(1);
-                $this->CI->db->order_by('COL_DISTANCE','DESC');
-                break;
-            case "QSO_VALID":
-                $this->CI->db->select('count(`COL_PRIMARY_KEY`) as `NB`');
-                $this->CI->db->where("(`COL_EQSL_QSL_RCVD`='Y' OR `COL_LOTW_QSL_RCVD`='Y' OR `COL_QSL_RCVD`='Y')");
-                break;
-            case "DXCC_NEW":
-                $sql = "SELECT DISTINCT `COL_DXCC`, `dxcc_entities`.`name` FROM ".$this->CI->config->item('table_name')."
-                        LEFT JOIN `dxcc_entities` ON ".$this->CI->config->item('table_name').".`COL_DXCC` = `dxcc_entities`.`adif`
-                        WHERE `COL_DXCC`>0 AND (`COL_TIME_ON` >= '".$_pluginsdata_data['contest_dhStart']."' AND `COL_TIME_OFF` <= '".xss_clean($_pluginsdata_data['contest_dhEnd'])."') AND `COL_DXCC` NOT IN (
-                            SELECT DISTINCT `COL_DXCC` FROM ".$this->CI->config->item('table_name')."
-                            WHERE `COL_DXCC`>0 AND `COL_TIME_ON` < '".$_pluginsdata_data['contest_dhStart']."'
-                        ) ORDER BY `dxcc_entities`.`name` ASC";
-                return $this->db->query($sql);              
-                break;
-            case "CQZ_NEW":
-                $sql = "SELECT DISTINCT `COL_CQZ` FROM ".$this->CI->config->item('table_name')."
-                        WHERE `COL_CQZ`>0 AND (`COL_TIME_ON` >= '".$_pluginsdata_data['contest_dhStart']."' AND `COL_TIME_OFF` <= '".xss_clean($_pluginsdata_data['contest_dhEnd'])."') AND `COL_CQZ` NOT IN (
-                            SELECT DISTINCT `COL_CQZ` FROM ".$this->CI->config->item('table_name')."
-                            WHERE `COL_CQZ`>0 AND `COL_TIME_ON` < '".$_pluginsdata_data['contest_dhStart']."'
-                        )";
-                return $this->db->query($sql);              
-                break;
-            case "CALL_IS_DUP":
-                $sql = "SELECT 1 AS `CALL_EXIST` FROM ".$this->CI->config->item('table_name')."
-                        WHERE (`COL_TIME_ON` >= '".xss_clean($_pluginsdata_data['contest_dhStart'])."' AND `COL_TIME_OFF` < '".xss_clean($_filter['qso']->COL_TIME_ON)."')
-                            AND `COL_BAND` = '".xss_clean($_filter['qso']->COL_BAND)."'
-                            AND `COL_CALL` = '".xss_clean($_filter['qso']->COL_CALL)."'
-                            AND `station_id` = '".xss_clean($_pluginsdata_data['contest_station_id'])."' 
-                            AND `COL_CONTEST_ID` = '".xss_clean($_pluginsdata_data['contest_cl_adif'])."' ";
-                return $this->db->query($sql);              
-                break;
-
-        }
-        //$this->CI->db->where($_bddcoluserdef_namecontest, xss_clean($_pluginsdata_data['contest_name']));
-        $this->CI->db->where('station_id', xss_clean($_pluginsdata_data['contest_station_id']));
-        $this->CI->db->where('COL_CONTEST_ID', xss_clean($_pluginsdata_data['contest_cl_adif']));
-        $this->CI->db->where(" (COL_TIME_ON >= '".$_pluginsdata_data['contest_dhStart']."' AND COL_TIME_OFF <= '".$_pluginsdata_data['contest_dhEnd']."') ");
-        
-        return $this->CI->db->get($this->CI->config->item('table_name'));
-    }
-    // 
-    private function model_get_stat_info_by_band($_data,$_what="",$_filter=array()) { 
-        if ($_what=="DUP") {
-            $sql = "SELECT `COL_BAND`, count(`COL_CALL`) AS NB FROM (
-                        SELECT `COL_BAND`,`COL_CALL`,count(`COL_CALL`) AS `NBCALL` FROM ".$this->CI->config->item('table_name')." 
-                        WHERE `station_id` = '".xss_clean($_data['pluginsdata_data']['contest_station_id'])."' 
-                            AND `COL_CONTEST_ID` = '".xss_clean($_data['pluginsdata_data']['contest_cl_adif'])."'
-                            AND (`COL_TIME_ON` >= '".$_data['pluginsdata_data']['contest_dhStart']."' AND `COL_TIME_OFF` <= '".$_data['pluginsdata_data']['contest_dhEnd']."')
-                            GROUP BY `COL_BAND`, `COL_CALL` ) AS T
-                    WHERE NBCALL > 1 GROUP BY `COL_BAND`";
-            return $this->db->query($sql);
-        } else if ($_what=="DUP_LIST") {
-            $sql = "SELECT * FROM (
-                        SELECT `COL_BAND`,`COL_CALL`,`dxcc_entities`.`name` AS `DXCC_N`,`COL_DXCC`,`COL_CONT`,count(`COL_CALL`) AS `NBCALL` FROM ".$this->CI->config->item('table_name')." 
-                        LEFT JOIN `dxcc_entities` ON ".$this->CI->config->item('table_name').".`COL_DXCC` = `dxcc_entities`.`adif`
-                        WHERE `COL_DXCC`>0 
-                            AND `station_id` = '".xss_clean($_data['pluginsdata_data']['contest_station_id'])."' 
-                            AND `COL_CONTEST_ID` = '".xss_clean($_data['pluginsdata_data']['contest_cl_adif'])."'
-                            AND (`COL_TIME_ON` >= '".$_data['pluginsdata_data']['contest_dhStart']."' AND `COL_TIME_OFF` <= '".$_data['pluginsdata_data']['contest_dhEnd']."')
-                            GROUP BY `COL_BAND`, `COL_CALL` ) AS T
-                    WHERE NBCALL > 1 ORDER BY `NBCALL` DESC";
-            return $this->db->query($sql);
-        } else if ($_what=="PTS_Q") {
-            if (isset($_data['pluginsext_row']->pluginsext_params->bddcoluserdef_pts)) { $_bddcoluserdef_pts = "SUM(`".$_data['pluginsext_row']->pluginsext_params->bddcoluserdef_pts."`)"; } else { $_bddcoluserdef_pts = "0"; }
-            $sql = " SELECT `COL_BAND`, SUM(`PTS`/`QSO`) AS `NB` FROM (
-                        SELECT count(`COL_PRIMARY_KEY`) AS `QSO`, ".$_bddcoluserdef_pts." AS `PTS`, `COL_BAND` FROM ".$this->CI->config->item('table_name')."
-                        WHERE `station_id` = '".xss_clean($_data['pluginsdata_data']['contest_station_id'])."' 
-                            AND `COL_CONTEST_ID` = '".xss_clean($_data['pluginsdata_data']['contest_cl_adif'])."'
-                            AND (`COL_TIME_ON` >= '".$_data['pluginsdata_data']['contest_dhStart']."' AND `COL_TIME_OFF` <= '".$_data['pluginsdata_data']['contest_dhEnd']."')
-                            GROUP BY `COL_BAND`) AS T
-                    GROUP BY `COL_BAND`";
-            return $this->db->query($sql);
-        }
-        //
-        switch($_what) {
-            case "QSO":
-            case "QSO_OOC":
-            case "QSO_OODX":
-                $this->CI->db->select('count(COL_PRIMARY_KEY) AS NB, COL_BAND');
-                if ($_what=="QSO_OOC") { $this->CI->db->where("COL_CONT != '".$_filter['COL_CONT']."'"); }
-                if ($_what=="QSO_OODX") { $this->CI->db->where("COL_DXCC != '".$_filter['COL_DXCC']."'"); }
-                $this->CI->db->group_by("COL_BAND");
-                break;
-            case "CQZ":
-                $this->CI->db->select('count(DISTINCT COL_CQZ) as NB, COL_BAND');
-                $this->CI->db->group_by("COL_BAND");
-                break;
-            case "DXC": 
-                $this->CI->db->select('count(DISTINCT COL_DXCC) AS NB, COL_BAND');
-                $this->CI->db->group_by("COL_BAND");
-                break;
-            case "DPT":
-                $this->CI->db->select('count(DISTINCT COL_SRX_STRING) AS NB, COL_BAND');
-                $this->CI->db->group_by("COL_BAND");
-                break;                
-            case "PTS":
-                if (isset($_data['pluginsext_row']->pluginsext_params->bddcoluserdef_pts)) { $_bddcoluserdef_pts = "SUM(`".$_data['pluginsext_row']->pluginsext_params->bddcoluserdef_pts."`)"; } else { $_bddcoluserdef_pts = "0"; }
-                $this->CI->db->select($_bddcoluserdef_pts.' AS `NB`, COL_BAND');
-                $this->CI->db->group_by("COL_BAND");
-                break;
-        }
-        //$this->CI->db->where($_bddcoluserdef_namecontest, xss_clean($_pluginsdata_data['contest_name'])); // not used //
-        $this->CI->db->where('station_id', xss_clean($_data['pluginsdata_data']['contest_station_id']));
-        $this->CI->db->where('COL_CONTEST_ID', xss_clean($_data['pluginsdata_data']['contest_cl_adif']));
-        $this->CI->db->where(" (COL_TIME_ON >= '".$_data['pluginsdata_data']['contest_dhStart']."' AND COL_TIME_OFF <= '".$_data['pluginsdata_data']['contest_dhEnd']."') ");
-        
-        return $this->CI->db->get($this->CI->config->item('table_name'));
-    }
-    //
-    private function model_get_dxcc_info($adif, $col) {
-        $query = $this->db->query('SELECT * FROM dxcc_entities WHERE adif = "'.$adif.'" LIMIT 1');
-        return $query->row()->$col;
-    }
 }

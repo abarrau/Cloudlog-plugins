@@ -37,7 +37,7 @@ class CI_Sharedata extends Pluginsext_extands {
         		case "filterlocation": $filter_qso = " (station_id='".$_data['methode_args']['arg2']."') "; break;  
         	}
         }
-        $hide_contest_qso = isset($_data['pluginsext_row']->pluginsext_params->hide_contest_qso)?$_data['pluginsext_row']->pluginsext_params->hide_contest_qso:1;
+        $hide_contest_qso = true; // ALWAYS HIDE // isset($_data['pluginsext_row']->pluginsext_params->hide_contest_qso)?$_data['pluginsext_row']->pluginsext_params->hide_contest_qso:1;
         $hide_ft8 = isset($_data['pluginsext_row']->pluginsext_params->hide_ft8)?$_data['pluginsext_row']->pluginsext_params->hide_ft8:1;
         $_data['pluginsext_row']->list_qso = isset($_data['pluginsext_row']->pluginsext_params->nb_last_qso)?$this->model_lastqso($_data['_oUser'], $_data['pluginsext_row']->pluginsext_params->nb_last_qso,$filter_qso,$hide_contest_qso,$hide_ft8)->result():array();
 
@@ -95,7 +95,7 @@ class CI_Sharedata extends Pluginsext_extands {
                 log_message('debug','[Pluginsext]['.get_called_class().'] C1:'.date('Y-m-d H:i:s',$_data['pluginsext_row']->pluginsext_values->onair_date).'>'.$_data['sharedata_last_qso'][0]->COL_TIME_ON);
             } else {
                 $onair_dateref = strtotime($_data['sharedata_last_qso'][0]->COL_TIME_ON);
-                log_message('debug','[Pluginsext]['.get_called_class().'] C2:'.date('Y-m-d H:i:s',$_data['pluginsext_row']->pluginsext_values->onair_date).'<'.$_data['sharedata_last_qso'][0]->COL_TIME_ON);
+                log_message('debug','[Pluginsext]['.get_called_class().'] C2:"'.((intval($_data['pluginsext_row']->pluginsext_values->onair_date>0))?date('Y-m-d H:i:s',$_data['pluginsext_row']->pluginsext_values->onair_date):'').'"<'.$_data['sharedata_last_qso'][0]->COL_TIME_ON);
             }
             if (($onair_dateref+($_data['pluginsext_row']->pluginsext_params->onair_timeout*60)) >= date('U')) {
                 $_data['pluginsext_row']->pluginsext_values->onair_date = $onair_dateref;
@@ -110,6 +110,7 @@ class CI_Sharedata extends Pluginsext_extands {
         }
         if ($onair_state==1) {
             $onair_icon = $_data['pluginsext_row']->pluginsext_params->onair_showon;
+            if ($_data['sharedata_last_qso'][0]->COL_CONTEST_ID>0) { $_data['pluginsext_row']->pluginsext_params->onair_show_band = 0; }
             switch($_data['pluginsext_row']->pluginsext_params->onair_show_band) {
                 case "1":
                 case "B": $onair_band = ($_data['sharedata_last_qso'][0]->COL_SAT_NAME!='')?$_data['sharedata_last_qso'][0]->COL_SAT_NAME:$_data['sharedata_last_qso'][0]->COL_BAND;
@@ -136,8 +137,8 @@ class CI_Sharedata extends Pluginsext_extands {
         $this->load->model('logbooks_model');
         $logbooks_locations_array = $this->logbooks_model->list_logbook_relationships($_oUser->active_station_logbook);
         if(!empty($logbooks_locations_array)) {
-            $this->db->select('COL_CALL, COL_BAND, COL_FREQ, COL_TIME_ON, COL_RST_RCVD, COL_RST_SENT, COL_MODE, COL_SUBMODE, COL_NAME, COL_COUNTRY, COL_PRIMARY_KEY, COL_SAT_NAME, COL_STATION_CALLSIGN, COL_MY_GRIDSQUARE');
-            if ($hidecontest) { $this->db->where(" (COL_CONTEST_ID IS NULL OR COL_CONTEST_ID='') "); }
+            $this->db->select('COL_CALL, COL_BAND, COL_FREQ, COL_TIME_ON, COL_RST_RCVD, COL_RST_SENT, COL_MODE, COL_SUBMODE, COL_NAME, COL_COUNTRY, COL_PRIMARY_KEY, COL_SAT_NAME, COL_STATION_CALLSIGN, COL_MY_GRIDSQUARE, COL_CONTEST_ID');
+            $this->db->where(" (COL_CONTEST_ID IS NULL OR COL_CONTEST_ID='') "); // if ($hidecontest) { }
             if ($hideft8) { $this->db->where(" !( ((COL_MODE = 'MFSK')&&(COL_SUBMODE = 'FT4')) || (COL_MODE = 'FT8') ) "); }
             if ($filter) { $this->db->where($filter); }
             $this->db->where_in('station_id', $logbooks_locations_array);
